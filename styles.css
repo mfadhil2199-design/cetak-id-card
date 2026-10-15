@@ -1,0 +1,338 @@
+/* CetakID Kemenag Kalsel - Custom Stylesheet */
+
+@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700;900&family=Oswald:wght@600;700&family=Plus+Jakarta+Sans:wght@500;600;700;800;900&family=JetBrains+Mono:wght@500;700&display=swap');
+
+:root {
+  --kemenag-green: #0b5742;
+  --kemenag-dark-teal: #084037;
+  --kemenag-navy: #1a2c44;
+  --kemenag-gold: #f59e0b;
+  --kemenag-yellow: #ffde59;
+}
+
+body {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  background-color: #f8fafc;
+  color: #1e293b;
+  overflow-x: hidden;
+}
+
+.mono-font {
+  font-family: 'JetBrains Mono', monospace;
+}
+
+/* Tab Switching Animations */
+.tab-pane {
+  display: none;
+  opacity: 0;
+  transform: translateY(8px);
+  transition: opacity 0.3s cubic-bezier(0.16, 1, 0.3, 1), transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.tab-pane.active {
+  display: block;
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* ======================================================== */
+/* OFFICIAL KEMENAG ID CARD (PORTRAIT CR-80) */
+/* Standard CR-80 Ratio: 54mm x 85.6mm (1 : 1.585) */
+/* Screen Display: 320px width x 525px height */
+/* ======================================================== */
+
+.kemenag-card {
+  width: 320px;
+  height: 525px;
+  border-radius: 18px;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 20px 40px -15px rgba(8, 64, 55, 0.25), 0 0 0 1px rgba(0, 0, 0, 0.08);
+  background-color: #ffffff;
+  user-select: none;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.kemenag-card:hover {
+  box-shadow: 0 25px 50px -12px rgba(8, 64, 55, 0.32), 0 0 0 1px rgba(0, 0, 0, 0.12);
+}
+
+/* FRONT CARD LAYERING */
+.kemenag-card-front {
+  background-image: url('assets/kemenag_front_blank.png');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
+/* Person's Cutout Half-Body Photo Layer */
+.kemenag-photo-layer {
+  position: absolute;
+  left: -15px;
+  bottom: 0;
+  width: 260px;
+  height: 440px;
+  z-index: 10;
+  pointer-events: none;
+  display: flex;
+  align-items: flex-end;
+  justify-content: flex-start;
+}
+
+.kemenag-photo-img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: bottom left;
+  filter: drop-shadow(0 10px 18px rgba(0, 0, 0, 0.3));
+  transition: transform 0.2s ease;
+}
+
+/* Bottom Yellow-Teal Curved Ribbon Overlay */
+.kemenag-wave-overlay {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-image: url('assets/kemenag_front_wave_overlay.png');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  z-index: 20;
+  pointer-events: none;
+}
+
+/* Front Text Content (Name & NIP on the bottom) */
+.kemenag-front-text {
+  position: absolute;
+  bottom: 22px;
+  right: 18px;
+  left: 24px;
+  text-align: right;
+  z-index: 30;
+  pointer-events: none;
+}
+
+.kemenag-front-name {
+  font-family: 'Oswald', sans-serif;
+  font-weight: 700;
+  font-size: 21px;
+  line-height: 1.15;
+  color: #ffffff;
+  letter-spacing: 0.01em;
+  text-transform: uppercase;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+}
+
+.kemenag-front-nip {
+  font-family: 'Roboto', sans-serif;
+  font-weight: 700;
+  font-size: 11px;
+  color: #ffde59; /* Official Canva yellow #ffde59 */
+  letter-spacing: 0.02em;
+  margin-top: 3px;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
+}
+
+/* ======================================================== */
+/* BACK CARD LAYERING (100% MATCHING OFFICIAL PDF TYPOGRAPHY) */
+/* ======================================================== */
+.kemenag-card-back {
+  background-image: url('assets/kemenag_back_blank.png');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  position: relative;
+}
+
+/* Middle Dynamic Text on Card Back */
+.kemenag-back-content {
+  position: absolute;
+  top: 86px;
+  left: 14px;
+  right: 14px;
+  text-align: center;
+  font-family: 'Roboto', sans-serif;
+  color: #1a2c44;
+}
+
+/* Standardized Typography for all back elements: Roboto-Bold 12.5px #1a2c44 */
+.back-text-item {
+  font-family: 'Roboto', sans-serif;
+  font-weight: 700;
+  font-size: 12.5px;
+  color: #1a2c44;
+  line-height: 1.38;
+  letter-spacing: 0.01em;
+  margin: 0;
+}
+
+.back-label-gap {
+  margin-bottom: 2px;
+}
+
+.back-section-gap {
+  margin-bottom: 11px;
+}
+
+/* Kepala Kanwil Signature & Name on Card Back */
+.back-kepala-title {
+  font-family: 'Roboto', sans-serif;
+  font-weight: 700;
+  font-size: 12.5px;
+  color: #1a2c44;
+  margin-top: 6px;
+  margin-bottom: 44px; /* Space for the official purple stamp and signature */
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+
+.back-kepala-name {
+  font-family: 'Roboto', sans-serif;
+  font-weight: 700;
+  font-size: 11.5px;
+  color: #1a2c44;
+  line-height: 1.25;
+  margin: 0;
+  letter-spacing: 0.01em;
+}
+
+.back-kepala-nip {
+  font-family: 'Roboto', sans-serif;
+  font-weight: 700;
+  font-size: 10.5px;
+  color: #1a2c44;
+  line-height: 1.25;
+  margin-top: 1px;
+  margin-bottom: 0;
+  letter-spacing: 0.02em;
+}
+
+/* Hologram Sheen Effect */
+.card-hologram {
+  position: absolute;
+  top: 0;
+  left: -150%;
+  width: 80%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.08) 40%,
+    rgba(255, 255, 255, 0.25) 50%,
+    rgba(255, 255, 255, 0.08) 60%,
+    transparent 100%
+  );
+  transform: skewX(-25deg);
+  animation: shine-sweep 6s infinite ease-in-out;
+  pointer-events: none;
+  z-index: 40;
+}
+
+@keyframes shine-sweep {
+  0% { left: -150%; }
+  30% { left: 200%; }
+  100% { left: 200%; }
+}
+
+/* ======================================================== */
+/* PRINT SPECIFIC STYLES (CR-80: 54mm x 85.6mm) */
+/* ======================================================== */
+@media print {
+  @page {
+    size: A4 portrait;
+    margin: 10mm;
+  }
+
+  body {
+    background: transparent !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+
+  body * {
+    visibility: hidden;
+  }
+
+  #print-container,
+  #print-container * {
+    visibility: visible;
+  }
+
+  #print-container {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    margin: 0;
+    padding: 0;
+    display: flex !important;
+    flex-direction: row !important;
+    justify-content: center !important;
+    align-items: center !important;
+    gap: 15mm !important;
+    background: transparent !important;
+  }
+
+  .no-print {
+    display: none !important;
+  }
+
+  .kemenag-card {
+    width: 54mm !important;
+    height: 85.6mm !important;
+    border-radius: 3mm !important;
+    box-shadow: none !important;
+    border: 0.2mm solid #cbd5e1 !important;
+    page-break-inside: avoid !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    margin: 0 !important;
+  }
+
+  .kemenag-front-name {
+    font-size: 13pt !important;
+  }
+
+  .kemenag-front-nip {
+    font-size: 7.5pt !important;
+  }
+
+  .back-text-item {
+    font-size: 7.5pt !important;
+  }
+
+  .card-hologram {
+    display: none !important;
+  }
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: #f1f5f9;
+}
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* Dedicated Admin Header Styling */
+#header-admin {
+  background-color: #0f172a !important;
+  border-bottom: 1px solid #1e293b !important;
+  color: #ffffff !important;
+}
+
+#header-admin a,
+#header-admin span,
+#header-admin p {
+  user-select: none;
+}
