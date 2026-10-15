@@ -54,6 +54,17 @@ Aplikasi web modern untuk permohonan, pengelolaan, dan pencetakan ID Card Pegawa
 - Petugas admin dapat mengklik tombol **Cetak Kartu** untuk melihat pratinjau dua sisi (Tampak Depan & Tampak Belakang) berskala standar CR-80.
 - Tombol **"Cetak Kartu Sekarang"** langsung mengaktifkan dialog print browser dengan pengaturan khusus cetak PVC/kertas A4 tanpa margin berlebih (`@media print`).
 
+### 8. ☁️ Integrasi Backend Google Apps Script & Google Sheets
+- **URL Web App**: Terhubung langsung ke endpoint Google Apps Script:
+  `https://script.google.com/macros/s/AKfycbyPNEKuUv3hIn6LJKjCX_F7EzCpWPRMcIMt85qkA2r4aenQ8ApKi7RbFs9nOHFCtKa3ug/exec`
+- **Penyimpanan Dua Arah (Two-Way Sync)**:
+  - Setiap kali ada pegawai mengisi formulir atau admin menambah pegawai, data **otomatis dikirim ke Google Sheets**.
+  - Foto pegawai disimpan langsung ke **Google Drive** dan tautan filenya dicatat rapi di Google Sheets.
+  - Perubahan status dari admin langsung memperbarui baris status di Google Sheets.
+- **Dukungan Offline / Resilient**:
+  - Jika internet lambat atau backend Google Apps Script sedang tidak dapat dijangkau, website tetap berfungsi 100% menggunakan cache browser `localStorage`.
+- **Kode Skrip Siap Pakai**: Seluruh logika Google Apps Script telah disediakan di file [`GoogleAppsScript_Code.gs`](file:///c:/Users/Muhammad%20Fadhil/Downloads/cetak-id-card/GoogleAppsScript_Code.gs).
+
 ---
 
 ## 🚀 Cara Menjalankan Website
@@ -68,3 +79,17 @@ Aplikasi web modern untuk permohonan, pengelolaan, dan pencetakan ID Card Pegawa
 - **URL / Navigasi**: Klik tombol **Admin** di pojok kanan atas Navbar
 - **Username**: `admin`
 - **Password**: `admin`
+
+---
+
+## 📋 Panduan Penerapan Google Apps Script (`GoogleAppsScript_Code.gs`)
+
+1. Buka Google Spreadsheet tujuan Anda (atau buat baru di https://sheets.new).
+2. Klik menu **Ekstensi (Extensions)** > **Apps Script**.
+3. Buka file **[`GoogleAppsScript_Code.gs`](file:///c:/Users/Muhammad%20Fadhil/Downloads/cetak-id-card/GoogleAppsScript_Code.gs)** di folder proyek ini, salin seluruh kodenya, dan gantikan isi `Code.gs` di editor Google Apps Script.
+4. Klik tombol **Simpan** (ikon disket / `Ctrl + S`).
+5. Klik tombol biru **Terapkan (Deploy)** di pojok kanan atas > pilih **Kelola penerapan (Manage deployments)**.
+6. Klik ikon **Pensil (Edit)** pada penerapan Web App Anda:
+   - Pada kolom **Versi**, pilih **"Versi Baru" (New Version)**.
+   - Pada kolom **Akses (Who has access)**, pastikan dipilih **"Siapa saja" (Anyone)**.
+7. Klik **Terapkan (Deploy)**. Selesai! Endpoint Anda kini aktif melayani `doGet` dan `doPost`.

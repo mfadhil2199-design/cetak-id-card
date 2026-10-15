@@ -79,8 +79,15 @@
           </button>
         </nav>
 
-        <!-- Right Quick Actions: Cek Status NIP & Admin Button -->
+        <!-- Right Quick Actions: Sinkronisasi Sheets, Cek Status NIP & Admin Button -->
         <div class="hidden sm:flex items-center space-x-2">
+          <!-- Google Sheets Sync Indicator -->
+          <button id="gas-sync-indicator" onclick="syncWithBackend(false)" class="flex items-center space-x-1.5 px-2.5 py-1.5 text-xs font-semibold rounded-xl bg-slate-100 hover:bg-emerald-50 text-slate-700 hover:text-emerald-800 border border-slate-200 transition" title="Status Sinkronisasi Google Sheets (Klik untuk sinkronkan sekarang)">
+            <span class="w-2 h-2 rounded-full bg-slate-400"></span>
+            <i class="fa-solid fa-cloud text-emerald-600 text-xs"></i>
+            <span id="gas-sync-label">Google Sheets</span>
+          </button>
+
           <button onclick="openQuickTrackModal()" class="flex items-center space-x-1.5 px-3 py-1.5 text-xs font-bold rounded-xl border border-slate-200 text-slate-700 hover:border-emerald-300 hover:bg-emerald-50/60 hover:text-emerald-800 transition">
             <i class="fa-solid fa-magnifying-glass text-emerald-600"></i>
             <span>Cek Status NIP</span>
@@ -179,8 +186,15 @@
           </button>
         </nav>
 
-        <!-- Right Quick Actions: Lihat Web Pemohon, Logout -->
+        <!-- Right Quick Actions: Sync Sheets, Lihat Web Pemohon, Logout -->
         <div class="hidden sm:flex items-center space-x-2">
+          <!-- Google Sheets Admin Sync Button -->
+          <button id="gas-admin-sync-indicator" type="button" onclick="syncWithBackend(false)" class="flex items-center space-x-1.5 px-2.5 py-1.5 text-xs font-semibold rounded-lg border border-slate-700 bg-slate-800/80 hover:bg-slate-800 text-slate-200 hover:text-white transition shadow-xs" title="Sinkronkan dengan Google Sheets">
+            <span class="w-2 h-2 rounded-full bg-slate-400"></span>
+            <i class="fa-solid fa-arrows-rotate text-emerald-400 text-xs"></i>
+            <span id="gas-admin-sync-label">Sync Sheets</span>
+          </button>
+
           <button type="button" onclick="switchTab('dashboard')" class="flex items-center space-x-1.5 px-2.5 py-1.5 text-xs font-semibold rounded-lg border border-slate-700 hover:border-slate-500 bg-slate-800/80 hover:bg-slate-800 text-slate-200 hover:text-white transition shadow-xs" title="Lihat Tampilan Dashboard Pemohon">
             <i class="fa-solid fa-eye text-emerald-400 text-xs"></i>
             <span>Web Pemohon</span>
@@ -897,7 +911,12 @@
               </p>
             </div>
             
-            <div class="flex items-center space-x-3">
+            <div class="flex items-center space-x-2.5">
+              <button type="button" onclick="syncWithBackend(false)" id="btn-sync-dashboard" class="px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 font-bold text-xs sm:text-sm shadow-xs transition flex items-center space-x-2" title="Sinkronkan data dari Google Sheets">
+                <i id="sync-icon-dashboard" class="fa-solid fa-arrows-rotate text-emerald-600"></i>
+                <span id="sync-text-dashboard">Sinkronkan Sheets</span>
+              </button>
+
               <button onclick="switchTab('formulir')" class="px-4 py-2.5 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-xs sm:text-sm shadow-md shadow-emerald-700/20 transition flex items-center space-x-2">
                 <i class="fa-solid fa-plus"></i>
                 <span>Ajukan ID Card Baru</span>
@@ -1034,7 +1053,12 @@
               </p>
             </div>
 
-            <div class="flex items-center space-x-3 self-start md:self-auto">
+            <div class="flex items-center space-x-2.5 self-start md:self-auto">
+              <button type="button" onclick="syncWithBackend(false)" class="px-3.5 py-2.5 rounded-xl border border-emerald-800/80 bg-emerald-950/70 hover:bg-emerald-900 text-emerald-200 font-bold text-xs shadow-md transition flex items-center space-x-2" title="Sinkronkan pembaruan dengan Google Sheets">
+                <i class="fa-solid fa-arrows-rotate text-emerald-400 text-xs"></i>
+                <span>Sinkronkan Sheets</span>
+              </button>
+
               <button onclick="openAdminAddEmployeeModal()" class="px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs shadow-md shadow-emerald-900/30 transition flex items-center space-x-2">
                 <i class="fa-solid fa-user-plus text-xs"></i>
                 <span>Tambah Pegawai Baru</span>

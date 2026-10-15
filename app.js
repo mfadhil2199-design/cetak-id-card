@@ -11,6 +11,12 @@ const UNITS_STORAGE_KEY = 'kemenag_idcard_units_v1';
 const BACK_SETTINGS_KEY = 'kemenag_idcard_back_settings_v1';
 const ADMIN_AUTH_KEY = 'kemenag_admin_logged_in';
 
+// Google Apps Script Web App Backend Endpoint
+const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyPNEKuUv3hIn6LJKjCX_F7EzCpWPRMcIMt85qkA2r4aenQ8ApKi7RbFs9nOHFCtKa3ug/exec';
+
+let isSyncingWithBackend = false;
+let backendSyncState = 'idle'; // 'idle' | 'syncing' | 'connected' | 'offline' | 'warning'
+
 let idCardRecords = [];
 let currentFilter = 'all';
 let currentAdminFilter = 'all';
@@ -96,6 +102,259 @@ const DEFAULT_DEMO_RECORDS = [
 ];
 
 // -------------------------------------------------------------
+// GOOGLE APPS SCRIPT BACKEND INTEGRATION SERVICE
+// -------------------------------------------------------------
+
+function updateSyncStatusUI(status, label) {
+  backendSyncState = status;
+  
+  // Public navbar indicator
+  const pubIndicator = document.getElementById('gas-sync-indicator');
+  const pubLabel = document.getElementById('gas-sync-label');
+  if (pubIndicator && pubLabel) {
+    pubLabel.textContent = label || (status === 'connected' ? 'Sheets Terhubung' : 'Mode Offline');
+    const dot = pubIndicator.querySelector('span');
+    if (dot) {
+      if (status === 'connected') {
+        dot.className = 'w-2 h-2 rounded-full bg-emerald-500 animate-pulse';
+        pubIndicator.className = 'flex items-center space-x-1.5 px-2.5 py-1.5 text-xs font-semibold rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-300 transition cursor-pointer';
+      } else if (status === 'syncing') {
+        dot.className = 'w-2 h-2 rounded-full bg-amber-500 animate-ping';
+        pubIndicator.className = 'flex items-center space-x-1.5 px-2.5 py-1.5 text-xs font-semibold rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-300 transition cursor-pointer';
+      } else {
+        dot.className = 'w-2 h-2 rounded-full bg-slate-400';
+        pubIndicator.className = 'flex items-center space-x-1.5 px-2.5 py-1.5 text-xs font-semibold rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 transition cursor-pointer';
+      }
+    }
+  }
+
+  // Admin navbar indicator
+  const adminIndicator = document.getElementById('gas-admin-sync-indicator');
+  const adminLabel = document.getElementById('gas-admin-sync-label');
+  if (adminIndicator && adminLabel) {
+    adminLabel.textContent = label || (status === 'connected' ? 'Sheets Terhubung' : 'Lokal / Offline');
+    const adminDot = adminIndicator.querySelector('span');
+    if (adminDot) {
+      if (status === 'connected') {
+        adminDot.className = 'w-2 h-2 rounded-full bg-emerald-400 animate-pulse';
+      } else if (status === 'syncing') {
+        adminDot.className = 'w-2 h-2 rounded-full bg-amber-400 animate-ping';
+      } else {
+        adminDot.className = 'w-2 h-2 rounded-full bg-slate-400';
+      }
+    }
+  }
+}
+
+async function syncWithBackend(silent = false) {
+  if (isSyncingWithBackend) return;
+  isSyncingWithBackend = true;
+
+  updateSyncStatusUI('syncing', 'Menyinkronkan...');
+  const syncBtnText = document.getElementById('sync-text-dashboard');
+  const syncIcon = document.getElementById('sync-icon-dashboard');
+  if (syncIcon) syncIcon.classList.add('fa-spin');
+  if (syncBtnText) syncBtnText.textContent = 'Menyinkronkan...';
+
+  try {
+    const response = await fetch(GOOGLE_SCRIPT_URL, {
+      method: 'GET',
+      headers: { 'Accept': 'application/json' }
+    });
+
+    const result = await response.json();
+    if (result && result.status === 'success' && Array.isArray(result.data)) {
+      const remoteRecords = result.data;
+      if (remoteRecords.length > 0) {
+        const localMap = new Map();
+        idCardRecords.forEach(r => localMap.set(r.id, r));
+
+        remoteRecords.forEach(rem => {
+          if (localMap.has(rem.id)) {
+            const loc = localMap.get(rem.id);
+            if (rem.status) loc.status = rem.status;
+            if (rem.name) loc.name = rem.name;
+            if (rem.nip) loc.nip = rem.nip;
+            if (rem.bidang) loc.bidang = rem.bidang;
+            if (rem.jabatan) loc.jabatan = rem.jabatan;
+            if (rem.date) loc.date = rem.date;
+            if (rem.photo && !loc.photo) loc.photo = rem.photo;
+          } else {
+            idCardRecords.push(rem);
+            localMap.set(rem.id, rem);
+          }
+        });
+
+        saveDataToStorage();
+        renderDashboardTable();
+        renderAdminTable();
+        updateStats();
+      }
+
+      updateSyncStatusUI('connected', 'Google Sheets Terhubung');
+      if (!silent) {
+        showToast(`Sinkronisasi berhasil! ${remoteRecords.length} data tersinkron dengan Google Sheets.`);
+      }
+    } else {
+      updateSyncStatusUI('offline', 'Mode Lokal');
+      if (!silent) {
+        showToast('Google Apps Script belum merespons JSON. Pastikan Code.gs sudah diterapkan sebagai Versi Baru.');
+      }
+    }
+  } catch (err) {
+    console.warn('Backend sync fallback to localStorage:', err);
+    updateSyncStatusUI('offline', 'Mode Lokal');
+    if (!silent) {
+      showToast('Belum dapat terhubung ke Google Apps Script. Data tetap tersimpan aman di browser.');
+    }
+  } finally {
+    isSyncingWithBackend = false;
+    if (syncIcon) syncIcon.classList.remove('fa-spin');
+    if (syncBtnText) syncBtnText.textContent = 'Sinkronkan Sheets';
+  }
+}
+
+async function sendRecordToBackend(record, action = 'create') {
+  try {
+    let uploadPhoto = record.photo;
+    if (uploadPhoto && uploadPhoto.startsWith('data:image')) {
+      uploadPhoto = await optimizePhotoForUpload(uploadPhoto, 500);
+    }
+
+    const payload = {
+      action: action,
+      id: record.id,
+      name: record.name,
+      nip: record.nip,
+      bidang: record.bidang,
+      jabatan: record.jabatan,
+      date: record.date,
+      photoReady: record.photoReady,
+      photo: uploadPhoto,
+      status: record.status || 'Menunggu Verifikasi',
+      createdAt: record.createdAt
+    };
+
+    // Text/plain avoids CORS preflight OPTIONS in browser
+    await fetch(GOOGLE_SCRIPT_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'text/plain;charset=utf-8'
+      },
+      body: JSON.stringify(payload)
+    });
+
+    console.log('Data permohonan berhasil dikirim ke Google Apps Script:', record.id);
+  } catch (err) {
+    console.warn('Gagal sinkron ke Google Apps Script, data aman di localStorage:', err);
+  }
+}
+
+async function updateStatusOnBackend(id, newStatus) {
+  try {
+    const payload = {
+      action: 'update_status',
+      id: id,
+      status: newStatus
+    };
+
+    await fetch(GOOGLE_SCRIPT_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'text/plain;charset=utf-8'
+      },
+      body: JSON.stringify(payload)
+    });
+
+    console.log(`Status ${id} berhasil dikirim ke Google Sheets:`, newStatus);
+  } catch (err) {
+    console.warn('Gagal update status di backend:', err);
+  }
+}
+
+async function updateRecordOnBackend(record) {
+  try {
+    let uploadPhoto = record.photo;
+    if (uploadPhoto && uploadPhoto.startsWith('data:image')) {
+      uploadPhoto = await optimizePhotoForUpload(uploadPhoto, 500);
+    }
+
+    const payload = {
+      action: 'update',
+      id: record.id,
+      name: record.name,
+      nip: record.nip,
+      bidang: record.bidang,
+      jabatan: record.jabatan,
+      date: record.date,
+      photoReady: record.photoReady,
+      photo: uploadPhoto,
+      status: record.status
+    };
+
+    await fetch(GOOGLE_SCRIPT_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'text/plain;charset=utf-8'
+      },
+      body: JSON.stringify(payload)
+    });
+
+    console.log('Data pegawai berhasil diupdate di backend:', record.id);
+  } catch (err) {
+    console.warn('Gagal update data pegawai di backend:', err);
+  }
+}
+
+async function deleteRecordOnBackend(id) {
+  try {
+    const payload = {
+      action: 'delete',
+      id: id
+    };
+
+    await fetch(GOOGLE_SCRIPT_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'text/plain;charset=utf-8'
+      },
+      body: JSON.stringify(payload)
+    });
+
+    console.log('Record berhasil dihapus di backend:', id);
+  } catch (err) {
+    console.warn('Gagal menghapus data di backend:', err);
+  }
+}
+
+function optimizePhotoForUpload(dataUrl, maxDim = 500) {
+  return new Promise(resolve => {
+    const img = new Image();
+    img.onload = () => {
+      let w = img.width;
+      let h = img.height;
+      if (w > maxDim || h > maxDim) {
+        if (w > h) {
+          h = Math.round((h * maxDim) / w);
+          w = maxDim;
+        } else {
+          w = Math.round((w * maxDim) / h);
+          h = maxDim;
+        }
+      }
+      const canvas = document.createElement('canvas');
+      canvas.width = w;
+      canvas.height = h;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(img, 0, 0, w, h);
+      resolve(canvas.toDataURL('image/png', 0.85));
+    };
+    img.onerror = () => resolve(dataUrl);
+    img.src = dataUrl;
+  });
+}
+
+// -------------------------------------------------------------
 // INITIALIZATION
 // -------------------------------------------------------------
 document.addEventListener('DOMContentLoaded', () => {
@@ -116,6 +375,9 @@ document.addEventListener('DOMContentLoaded', () => {
   } else {
     switchTab('tata-cara');
   }
+
+  // Auto-sync with Google Apps Script backend on load
+  syncWithBackend(true);
 });
 
 // -------------------------------------------------------------
@@ -634,6 +896,9 @@ function handleFormSubmit(event) {
 
   idCardRecords.unshift(newRecord);
   saveDataToStorage();
+
+  // Kirim data ke backend Google Apps Script secara asynchronous
+  sendRecordToBackend(newRecord, 'create');
 
   lastSubmittedId = newRegId;
   document.getElementById('success-reg-id').textContent = newRegId;
@@ -1589,6 +1854,9 @@ function handleAdminStatusChange(id, newStatus) {
   saveDataToStorage();
   renderAdminTable();
   renderDashboardTable();
+
+  // Sinkronkan perubahan status ke backend Google Apps Script
+  updateStatusOnBackend(id, newStatus);
   showToast(`Status kartu ${id} diubah menjadi "${newStatus}"!`);
 }
 
@@ -1602,6 +1870,9 @@ function handleAdminDeleteRecord(id) {
   saveDataToStorage();
   renderAdminTable();
   renderDashboardTable();
+
+  // Hapus dari backend Google Apps Script
+  deleteRecordOnBackend(id);
   showToast(`Permohonan ${id} berhasil dihapus.`);
 }
 
@@ -1680,6 +1951,9 @@ function handleAdminSaveEdit(e) {
   renderAdminTable();
   renderDashboardTable();
   closeAdminEditModal();
+
+  // Sinkronkan edit pegawai ke backend Google Apps Script
+  updateRecordOnBackend(record);
   showToast(`Data pegawai ${record.name} berhasil diperbarui!`);
 }
 
@@ -1746,6 +2020,9 @@ function handleAdminSubmitNewEmployee(e) {
   renderAdminTable();
   renderDashboardTable();
   closeAdminAddEmployeeModal();
+
+  // Sinkronkan penambahan pegawai baru ke backend Google Apps Script
+  sendRecordToBackend(newRecord, 'create');
   showToast(`Permohonan ${newRegId} (${name}) berhasil ditambahkan!`);
 }
 
