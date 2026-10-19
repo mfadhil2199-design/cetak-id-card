@@ -14,7 +14,7 @@ const ADMIN_SESSION_KEY = 'kemenag_admin_session_v2';
 const ADMIN_ACCOUNTS_CACHE_KEY = 'kemenag_admin_accounts_cache_v1';
 
 // Endpoint Web App Google Apps Script (Integrasi Serverless)
-const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbyPNEKuUv3hIn6LJKjCX_F7EzCpWPRMcIMt85qkA2r4aenQ8ApKi7RbFs9nOHFCtKa3ug/exec';
+const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbwnnKi9Zj-xiG-gAadRRBBzmigGFujpNWce45CTFRRAcUw3e-mRlIGmgJaBOkSsOlNouQ/exec';
 const GOOGLE_SCRIPT_URL = WEB_APP_URL;
 
 // Konstanta Validasi sesuai PRD Bagian 3.1
