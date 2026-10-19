@@ -20,7 +20,7 @@ const GOOGLE_SCRIPT_URL = WEB_APP_URL;
 // Konstanta Validasi sesuai PRD Bagian 3.1
 const NIP_REGEX = /^[0-9]{18}$/;
 const PHONE_REGEX = /^[0-9]{9,16}$/;
-const MAX_PHOTO_SIZE_BYTES = 5 * 1024 * 1024; // Maksimal 2 MB (2.097.152 bytes)
+const MAX_PHOTO_SIZE_BYTES = 5 * 1024 * 1024; // Maksimal 5 MB (2.097.152 bytes)
 const ALLOWED_MIME_TYPES = ['image/jpeg', 'image/jpg', 'image/png'];
 const ALLOWED_EXTENSIONS = ['.jpg', '.jpeg', '.png'];
 
@@ -833,7 +833,7 @@ function formatIndonesianDate(dateStr) {
 }
 
 // ============================================================================
-// VALIDASI BERKAS FOTO (.JPG, .JPEG, .PNG MAKS 2 MB) & PEMBACAAN FILEREADER
+// VALIDASI BERKAS FOTO (.JPG, .JPEG, .PNG MAKS 5 MB) & PEMBACAAN FILEREADER
 // ============================================================================
 
 function validatePhotoFileObject(file) {
@@ -856,7 +856,7 @@ function validatePhotoFileObject(file) {
     const sizeMB = (file.size / (1024 * 1024)).toFixed(2);
     return {
       valid: false,
-      message: `Ukuran berkas (${sizeMB} MB) melebihi batas maksimal 2 MB!`
+      message: `Ukuran berkas (${sizeMB} MB) melebihi batas maksimal 5 MB!`
     };
   }
 
@@ -1273,7 +1273,7 @@ function handleFormSubmit(event) {
 
   if (photoOption === 'ready') {
     if (!userHasUploadedPhoto || !processedPhotoData) {
-      showFormValidationAlert('Anda memilih opsi "Unggah Foto Mandiri", namun belum memilih berkas foto (.jpg, .jpeg, atau .png maks 2 MB). Silakan unggah foto Anda terlebih dahulu atau pilih "Opsi Foto di Kantor".');
+      showFormValidationAlert('Anda memilih opsi "Unggah Foto Mandiri", namun belum memilih berkas foto (.jpg, .jpeg, atau .png maks 5 MB). Silakan unggah foto Anda terlebih dahulu atau pilih "Opsi Foto di Kantor".');
       return;
     }
     finalFoto = processedPhotoData; // Base64 Data URL asli hasil pemotongan background
