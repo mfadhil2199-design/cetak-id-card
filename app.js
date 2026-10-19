@@ -20,7 +20,7 @@ const GOOGLE_SCRIPT_URL = WEB_APP_URL;
 // Konstanta Validasi sesuai PRD Bagian 3.1
 const NIP_REGEX = /^[0-9]{18}$/;
 const PHONE_REGEX = /^[0-9]{9,16}$/;
-const MAX_PHOTO_SIZE_BYTES = 2 * 1024 * 1024; // Maksimal 2 MB (2.097.152 bytes)
+const MAX_PHOTO_SIZE_BYTES = 5 * 1024 * 1024; // Maksimal 2 MB (2.097.152 bytes)
 const ALLOWED_MIME_TYPES = ['image/jpeg', 'image/jpg', 'image/png'];
 const ALLOWED_EXTENSIONS = ['.jpg', '.jpeg', '.png'];
 
