@@ -1,187 +1,298 @@
 /**
- * CetakID Pegawai - Kanwil Kemenag Prov. Kalimantan Selatan
- * Application Logic: Half-body Photo Integration,
- * Smart Client-Side Background Removal, Admin Dashboard,
- * Real-time Validations, Dynamic Units & Template Settings.
+ * ============================================================================
+ * CetakID Kemenag – Sistem Layanan Mandiri & Pengelolaan ID Card Pegawai
+ * Instansi: Kanwil Kementerian Agama Provinsi Kalimantan Selatan
+ * Frontend Logic (app.js) - Sesuai Spesifikasi PRD Lengkap
+ * ============================================================================
  */
 
-// Storage Keys
-const STORAGE_KEY = 'kemenag_idcard_records_v6';
-const UNITS_STORAGE_KEY = 'kemenag_idcard_units_v1';
-const BACK_SETTINGS_KEY = 'kemenag_idcard_back_settings_v1';
-const ADMIN_AUTH_KEY = 'kemenag_admin_logged_in';
+// Kunci Penyimpanan Lokal (Cache & Session)
+const STORAGE_KEY = 'kemenag_idcard_records_v9';
+const UNITS_STORAGE_KEY = 'kemenag_idcard_units_v2';
+const CONFIG_STORAGE_KEY = 'kemenag_idcard_config_v3';
+const ADMIN_SESSION_KEY = 'kemenag_admin_session_v2';
+const ADMIN_ACCOUNTS_CACHE_KEY = 'kemenag_admin_accounts_cache_v1';
 
-// Google Apps Script Web App Backend Endpoint
-const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyPNEKuUv3hIn6LJKjCX_F7EzCpWPRMcIMt85qkA2r4aenQ8ApKi7RbFs9nOHFCtKa3ug/exec';
+// Endpoint Web App Google Apps Script (Integrasi Serverless)
+const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbyPNEKuUv3hIn6LJKjCX_F7EzCpWPRMcIMt85qkA2r4aenQ8ApKi7RbFs9nOHFCtKa3ug/exec';
+const GOOGLE_SCRIPT_URL = WEB_APP_URL;
 
+// Konstanta Validasi sesuai PRD Bagian 3.1
+const NIP_REGEX = /^[0-9]{18}$/;
+const PHONE_REGEX = /^[0-9]{9,16}$/;
+const MAX_PHOTO_SIZE_BYTES = 2 * 1024 * 1024; // Maksimal 2 MB (2.097.152 bytes)
+const ALLOWED_MIME_TYPES = ['image/jpeg', 'image/jpg', 'image/png'];
+const ALLOWED_EXTENSIONS = ['.jpg', '.jpeg', '.png'];
+
+// Pemisahan Konstanta Visual:
+// 1. DEFAULT_CARD_SAMPLE_PHOTO: Foto sampel pegawai setengah badan PNG transparan untuk Live Preview & Kartu ID
+// 2. DEFAULT_TABLE_AVATAR: Avatar/siluet kosong default netral pada tabel antrean untuk pegawai dengan opsi "Foto di Kantor"
+const DEFAULT_CARD_SAMPLE_PHOTO = 'assets/sample_pegawai_setengah_badan.png';
+const DEFAULT_TABLE_AVATAR = 'assets/default-avatar.png';
+const DEFAULT_AVATAR_PATH = DEFAULT_CARD_SAMPLE_PHOTO;
+
+// State Aplikasi
 let isSyncingWithBackend = false;
-let backendSyncState = 'idle'; // 'idle' | 'syncing' | 'connected' | 'offline' | 'warning'
-
+let backendSyncState = 'idle';
 let idCardRecords = [];
 let currentFilter = 'all';
 let currentAdminFilter = 'all';
 let currentAdminSubTab = 'requests';
 let currentPrintingRecord = null;
-let rawUploadedPhotoData = 'assets/sample_pegawai_setengah_badan.png';
-let processedPhotoData = 'assets/sample_pegawai_setengah_badan.png';
+let currentPrintModeOverride = null;
+
+// State Foto Formulir Pegawai
+let rawUploadedPhotoData = DEFAULT_CARD_SAMPLE_PHOTO;
+let processedPhotoData = DEFAULT_CARD_SAMPLE_PHOTO;
 let userHasUploadedPhoto = false;
+let currentFormPhotoRatio = 'cutout';
 let photoScale = 100;
 let photoOffset = 0;
 let lastSubmittedId = null;
 
-// Default Kemenag Kalsel Official Units
+// Daftar Unit Kerja Default Kanwil Kemenag Kalsel
 const DEFAULT_KEMENAG_UNITS = [
-  "Kanwil Kemenag Kalsel",
-  "Bidang Pendidikan Madrasah",
-  "Bidang Pendidikan Agama dan Keagamaan Islam",
-  "Bidang Pelayanan Haji & Umrah",
-  "Bidang Urusan Agama Islam",
-  "Bidang Penerangan Agama Islam",
-  "Bimbingan Masyarakat Kristen",
-  "Bimbingan Masyarakat Katolik",
-  "Bimbingan Masyarakat Hindu",
-  "Bimbingan Masyarakat Buddha",
   "Sub Bagian Perencanaan, Data & Informasi",
   "Sub Bagian Keuangan dan Barang Milik Negara",
   "Sub Bagian Kepegawaian & Hukum",
   "Sub Bagian Organisasi, Tata Laksana & KUB",
-  "Sub Bagian Umum & Humas"
+  "Sub Bagian Umum & Humas",
+  "Bidang Pendidikan Madrasah",
+  "Bidang Pendidikan Agama dan Keagamaan Islam",
+  "Bidang Penyelenggaraan Haji dan Umrah",
+  "Bidang Urusan Agama Islam",
+  "Bidang Penerangan Agama Islam, Zakat & Wakaf",
+  "Pembimas Kristen",
+  "Pembimas Katolik",
+  "Pembimas Hindu",
+  "Pembimas Buddha",
+  "Kanwil Kemenag Prov. Kalimantan Selatan"
 ];
 
 let kemenagUnits = [];
 
-// Default Card Back Typography & Officials
-const DEFAULT_BACK_SETTINGS = {
-  kepalaName: 'Dr. H. MUHAMMAD TAMBRIN, M.M.Pd',
-  kepalaNip: '196912181996031003',
-  kepalaTitle: 'KEPALA',
-  alamat1: 'Jl. D.I. Panjaitan',
-  alamat2: 'No. 19 Banjarmasin'
+// Konfigurasi Default Pimpinan & Template (Sesuai Tab 2: `Pengaturan` di PRD)
+const DEFAULT_CONFIG = {
+  nama_pimpinan: 'Dr. H. MUHAMMAD TAMBRIN, M.M.Pd',
+  nip_pimpinan: '196705121994031002',
+  jabatan_pimpinan: 'KEPALA',
+  ttd_pimpinan_url: '',
+  masa_berlaku: 'Selama Menjadi Pegawai',
+  template_aktif: 'template_1',
+  opsi_cetak: '2_sisi',
+  rasio_foto: 'cutout',
+  bg_depan_url: '',
+  bg_belakang_url: '',
+  aturan_kartu: '',
+  alamat_kantor_1: 'Jl. D.I. Panjaitan',
+  alamat_kantor_2: 'No. 19 Banjarmasin'
 };
 
-let cardBackSettings = { ...DEFAULT_BACK_SETTINGS };
+let appConfig = { ...DEFAULT_CONFIG };
 
-// Initial Demo Seed Records matching official Kemenag Kalsel Half-Body template
-const DEFAULT_DEMO_RECORDS = [
+// Daftar Akun Petugas Admin (Tanpa menyimpan plaintext password di kode sumber)
+let adminAccountsList = [
   {
-    id: 'KMN-2026-1001',
-    name: 'Rahmat Hidayat, S.Kom, M.M.',
-    nip: '198804122014021003',
-    bidang: 'Sub Bagian Perencanaan, Data & Informasi',
-    jabatan: 'Pranata Komputer Ahli Muda',
-    date: '2026-10-14',
-    photoReady: 'ready',
-    photo: 'assets/sample_pegawai_setengah_badan.png',
-    status: 'Selesai',
-    createdAt: '2026-10-14 08:30'
-  },
-  {
-    id: 'KMN-2026-1002',
-    name: 'Siti Nur Azizah, S.Pd.I',
-    nip: '198505122010012015',
-    bidang: 'Bidang Pendidikan Madrasah',
-    jabatan: 'Penyusun Bahan Pembinaan Kesiswaan',
-    date: '2026-10-13',
-    photoReady: 'ready',
-    photo: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=300&auto=format&fit=crop&q=80',
-    status: 'Sedang Dicetak',
-    createdAt: '2026-10-13 10:15'
-  },
-  {
-    id: 'KMN-2026-1003',
-    name: 'Ahmad Fauzan, M.Pd',
-    nip: '199203152019031004',
-    bidang: 'Bidang Urusan Agama Islam',
-    jabatan: 'Analis Kebijakan Ahli Pertama',
-    date: '2026-10-14',
-    photoReady: 'not_ready',
-    photo: null, // No photo uploaded - will show silhouette placeholder
-    status: 'Menunggu Verifikasi',
-    createdAt: '2026-10-14 09:00'
+    id_admin: 'ADM-01',
+    username: 'admin',
+    nama_petugas: 'Administrator Utama',
+    role: 'Superadmin',
+    status_aktif: 'Aktif',
+    // SHA-256 digest untuk verifikasi cadangan saat mode offline lokal
+    pwd_FrontDigest: '427af9d96536a81deb1f4c57ecec912ed77842d0f087f2ddef8f0baa41d487c6'
   }
 ];
 
-// -------------------------------------------------------------
-// GOOGLE APPS SCRIPT BACKEND INTEGRATION SERVICE
-// -------------------------------------------------------------
+// Data Sampel Awal Antrean (Sesuai Tab 1: `Sheet1` di PRD)
+const DEFAULT_DEMO_RECORDS = [
+  {
+    tiket: 'KMN-2026-7846',
+    id: 'KMN-2026-7846',
+    tanggal: '2026-10-15',
+    date: '2026-10-15',
+    nama: 'Rahmat Hidayat, S.Kom, M.M.',
+    name: 'Rahmat Hidayat, S.Kom, M.M.',
+    nip: '198804122014021003',
+    no_hp: '081251123456',
+    whatsapp: '081251123456',
+    unitKerja: 'Sub Bagian Perencanaan, Data & Informasi',
+    bidang: 'Sub Bagian Perencanaan, Data & Informasi',
+    jabatan: 'Pranata Komputer Ahli Muda',
+    foto: 'assets/sample_pegawai_setengah_badan.png',
+    photo: 'assets/sample_pegawai_setengah_badan.png',
+    photoReady: 'ready',
+    status: 'Selesai',
+    createdAt: '2026-10-15'
+  },
+  {
+    tiket: 'KMN-2026-4921',
+    id: 'KMN-2026-4921',
+    tanggal: '2026-10-17',
+    date: '2026-10-17',
+    nama: 'Siti Nur Azizah, S.Pd.I',
+    name: 'Siti Nur Azizah, S.Pd.I',
+    nip: '198505122010012015',
+    no_hp: '081349876543',
+    whatsapp: '081349876543',
+    unitKerja: 'Bidang Pendidikan Madrasah',
+    bidang: 'Bidang Pendidikan Madrasah',
+    jabatan: 'Analis Pengembang Peserta Didik',
+    foto: 'assets/sample_pegawai_random_halfbody.png',
+    photo: 'assets/sample_pegawai_random_halfbody.png',
+    photoReady: 'ready',
+    status: 'Sedang Dicetak',
+    createdAt: '2026-10-17'
+  },
+  {
+    tiket: 'KMN-2026-3108',
+    id: 'KMN-2026-3108',
+    tanggal: '2026-10-19',
+    date: '2026-10-19',
+    nama: 'Ahmad Fauzan, M.Pd.',
+    name: 'Ahmad Fauzan, M.Pd.',
+    nip: '199203152019031004',
+    no_hp: '085248112233',
+    whatsapp: '085248112233',
+    unitKerja: 'Bidang Urusan Agama Islam',
+    bidang: 'Bidang Urusan Agama Islam',
+    jabatan: 'Analis Kebijakan Ahli Pertama',
+    foto: DEFAULT_TABLE_AVATAR,
+    photo: DEFAULT_TABLE_AVATAR,
+    photoReady: 'not_ready',
+    status: 'Menunggu Verifikasi',
+    createdAt: '2026-10-19'
+  }
+];
+
+// ============================================================================
+// INISIALISASI APLIKASI SAAT HALAMAN DIMUAT
+// ============================================================================
+document.addEventListener('DOMContentLoaded', () => {
+  loadDataFromStorage();
+  loadUnits();
+  loadConfigFromStorage();
+  loadAdminAccountsCache();
+  setupDragAndDrop();
+  setDefaultDate();
+  populateUnitDropdowns();
+  applyConfigToUI();
+  updateLivePreview();
+  renderDashboardTable();
+  updateStats();
+  updateAdminUI();
+
+  const hash = window.location.hash.replace('#', '');
+  if (['tata-cara', 'formulir', 'dashboard', 'admin'].includes(hash)) {
+    switchTab(hash);
+  } else {
+    switchTab('tata-cara');
+  }
+
+  // Sinkronisasi otomatis dengan Google Apps Script (doGet)
+  syncWithBackend(true);
+});
+
+// ============================================================================
+// KOMUNIKASI API GOOGLE APPS SCRIPT (BAGIAN 5 PRD)
+// Seluruh permintaan POST wajib menggunakan:
+// headers: { "Content-Type": "text/plain;charset=utf-8" }
+// ============================================================================
+
+async function postToAppsScript(payloadObj) {
+  const response = await fetch(WEB_APP_URL, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'text/plain;charset=utf-8'
+    },
+    body: JSON.stringify(payloadObj)
+  });
+  return await response.json();
+}
 
 function updateSyncStatusUI(status, label) {
   backendSyncState = status;
-  
-  // Public navbar indicator
+
   const pubIndicator = document.getElementById('gas-sync-indicator');
   const pubLabel = document.getElementById('gas-sync-label');
   if (pubIndicator && pubLabel) {
-    pubLabel.textContent = label || (status === 'connected' ? 'Sheets Terhubung' : 'Mode Offline');
+    pubLabel.textContent = label || (status === 'connected' ? 'Terhubung' : 'Lokal');
     const dot = pubIndicator.querySelector('span');
     if (dot) {
       if (status === 'connected') {
         dot.className = 'w-2 h-2 rounded-full bg-emerald-500 animate-pulse';
-        pubIndicator.className = 'flex items-center space-x-1.5 px-2.5 py-1.5 text-xs font-semibold rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-300 transition cursor-pointer';
       } else if (status === 'syncing') {
         dot.className = 'w-2 h-2 rounded-full bg-amber-500 animate-ping';
-        pubIndicator.className = 'flex items-center space-x-1.5 px-2.5 py-1.5 text-xs font-semibold rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-300 transition cursor-pointer';
       } else {
         dot.className = 'w-2 h-2 rounded-full bg-slate-400';
-        pubIndicator.className = 'flex items-center space-x-1.5 px-2.5 py-1.5 text-xs font-semibold rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 transition cursor-pointer';
       }
     }
   }
 
-  // Admin navbar indicator
   const adminIndicator = document.getElementById('gas-admin-sync-indicator');
   const adminLabel = document.getElementById('gas-admin-sync-label');
   if (adminIndicator && adminLabel) {
-    adminLabel.textContent = label || (status === 'connected' ? 'Sheets Terhubung' : 'Lokal / Offline');
+    adminLabel.textContent = label || (status === 'connected' ? 'Sheets Aktif' : 'Mode Lokal');
     const adminDot = adminIndicator.querySelector('span');
     if (adminDot) {
-      if (status === 'connected') {
-        adminDot.className = 'w-2 h-2 rounded-full bg-emerald-400 animate-pulse';
-      } else if (status === 'syncing') {
-        adminDot.className = 'w-2 h-2 rounded-full bg-amber-400 animate-ping';
-      } else {
-        adminDot.className = 'w-2 h-2 rounded-full bg-slate-400';
-      }
+      adminDot.className = status === 'connected'
+        ? 'w-2 h-2 rounded-full bg-emerald-400 animate-pulse'
+        : status === 'syncing'
+          ? 'w-2 h-2 rounded-full bg-amber-400 animate-ping'
+          : 'w-2 h-2 rounded-full bg-slate-400';
     }
   }
 }
 
+/**
+ * 5.1 Endpoint doGet(e)
+ * Mengambil seluruh daftar antrean dari `Sheet1` serta data konfigurasi publik dari tab `Pengaturan`
+ */
 async function syncWithBackend(silent = false) {
   if (isSyncingWithBackend) return;
   isSyncingWithBackend = true;
 
-  updateSyncStatusUI('syncing', 'Menyinkronkan...');
+  updateSyncStatusUI('syncing', 'Sinkron...');
   const syncBtnText = document.getElementById('sync-text-dashboard');
   const syncIcon = document.getElementById('sync-icon-dashboard');
   if (syncIcon) syncIcon.classList.add('fa-spin');
   if (syncBtnText) syncBtnText.textContent = 'Menyinkronkan...';
 
   try {
-    const response = await fetch(GOOGLE_SCRIPT_URL, {
+    const response = await fetch(WEB_APP_URL, {
       method: 'GET',
       headers: { 'Accept': 'application/json' }
     });
 
     const result = await response.json();
-    if (result && result.status === 'success' && Array.isArray(result.data)) {
-      const remoteRecords = result.data;
-      if (remoteRecords.length > 0) {
+    if (result && result.status === 'success') {
+      // 1. Sinkronisasi Data Antrean (`Sheet1`)
+      if (Array.isArray(result.data) && result.data.length > 0) {
         const localMap = new Map();
-        idCardRecords.forEach(r => localMap.set(r.id, r));
+        idCardRecords.forEach(r => localMap.set(r.tiket || r.id, normalizeRecord(r)));
 
-        remoteRecords.forEach(rem => {
-          if (localMap.has(rem.id)) {
-            const loc = localMap.get(rem.id);
-            if (rem.status) loc.status = rem.status;
-            if (rem.name) loc.name = rem.name;
-            if (rem.nip) loc.nip = rem.nip;
-            if (rem.bidang) loc.bidang = rem.bidang;
-            if (rem.jabatan) loc.jabatan = rem.jabatan;
-            if (rem.date) loc.date = rem.date;
-            if (rem.photo && !loc.photo) loc.photo = rem.photo;
+        result.data.forEach(rem => {
+          const normRem = normalizeRecord(rem);
+          if (localMap.has(normRem.tiket)) {
+            const loc = localMap.get(normRem.tiket);
+            loc.status = normRem.status || loc.status;
+            loc.nama = normRem.nama || loc.nama;
+            loc.name = loc.nama;
+            loc.nip = normRem.nip || loc.nip;
+            loc.no_hp = normRem.no_hp || loc.no_hp || '';
+            loc.whatsapp = loc.no_hp;
+            loc.unitKerja = normRem.unitKerja || loc.unitKerja;
+            loc.bidang = loc.unitKerja;
+            loc.jabatan = normRem.jabatan || loc.jabatan;
+            loc.tanggal = normRem.tanggal || loc.tanggal;
+            loc.date = loc.tanggal;
+            if (normRem.foto && normRem.foto !== DEFAULT_TABLE_AVATAR) {
+              loc.foto = normRem.foto;
+              loc.photo = normRem.foto;
+              loc.photoReady = 'ready';
+            }
           } else {
-            idCardRecords.push(rem);
-            localMap.set(rem.id, rem);
+            idCardRecords.push(normRem);
+            localMap.set(normRem.tiket, normRem);
           }
         });
 
@@ -191,143 +302,137 @@ async function syncWithBackend(silent = false) {
         updateStats();
       }
 
-      updateSyncStatusUI('connected', 'Google Sheets Terhubung');
+      // 2. Sinkronisasi Konfigurasi Pimpinan & Template (`Pengaturan`)
+      if (result.config && typeof result.config === 'object') {
+        appConfig = Object.assign({}, DEFAULT_CONFIG, appConfig, result.config);
+        if (result.config.unit_kerja_list) {
+          try {
+            const parsedUnits = JSON.parse(result.config.unit_kerja_list);
+            if (Array.isArray(parsedUnits) && parsedUnits.length > 0) {
+              kemenagUnits = parsedUnits;
+              saveUnits();
+            }
+          } catch (e) {}
+        }
+        saveConfigToStorage();
+        applyConfigToUI();
+        updateLivePreview();
+      }
+
+      updateSyncStatusUI('connected', 'Terhubung');
       if (!silent) {
-        showToast(`Sinkronisasi berhasil! ${remoteRecords.length} data tersinkron dengan Google Sheets.`);
+        showToast('Data antrean & konfigurasi berhasil disinkronkan dengan Google Sheets!');
       }
     } else {
-      updateSyncStatusUI('offline', 'Mode Lokal');
-      if (!silent) {
-        showToast('Google Apps Script belum merespons JSON. Pastikan Code.gs sudah diterapkan sebagai Versi Baru.');
-      }
+      updateSyncStatusUI('offline', 'Lokal');
     }
   } catch (err) {
-    console.warn('Backend sync fallback to localStorage:', err);
-    updateSyncStatusUI('offline', 'Mode Lokal');
+    console.warn('Sinkronisasi cloud menggunakan fallback penyimpanan lokal:', err);
+    updateSyncStatusUI('offline', 'Lokal');
     if (!silent) {
-      showToast('Belum dapat terhubung ke Google Apps Script. Data tetap tersimpan aman di browser.');
+      showToast('Menggunakan penyimpanan lokal peramban (pastikan Web App Google Apps Script telah di-deploy).');
     }
   } finally {
     isSyncingWithBackend = false;
     if (syncIcon) syncIcon.classList.remove('fa-spin');
-    if (syncBtnText) syncBtnText.textContent = 'Sinkronkan Sheets';
+    if (syncBtnText) syncBtnText.textContent = 'Muat Ulang Data';
   }
 }
 
-async function sendRecordToBackend(record, action = 'create') {
+/**
+ * 5.2.1 Action: "create"
+ * Menyertakan nilai no_hp / whatsapp dalam payload JSON action: "create"
+ */
+async function sendRecordToBackend(record) {
   try {
-    let uploadPhoto = record.photo;
+    let uploadPhoto = record.foto || record.photo || DEFAULT_TABLE_AVATAR;
     if (uploadPhoto && uploadPhoto.startsWith('data:image')) {
-      uploadPhoto = await optimizePhotoForUpload(uploadPhoto, 500);
+      uploadPhoto = await optimizePhotoForUpload(uploadPhoto, 600);
     }
 
+    const contactPhone = String(record.no_hp || record.whatsapp || '').trim();
+
     const payload = {
-      action: action,
-      id: record.id,
-      name: record.name,
+      action: 'create',
+      tiket: record.tiket,
+      tanggal: record.tanggal,
+      nama: record.nama,
       nip: record.nip,
-      bidang: record.bidang,
+      no_hp: contactPhone,
+      whatsapp: contactPhone,
+      unitKerja: record.unitKerja,
       jabatan: record.jabatan,
-      date: record.date,
-      photoReady: record.photoReady,
-      photo: uploadPhoto,
+      foto: uploadPhoto,
       status: record.status || 'Menunggu Verifikasi',
-      createdAt: record.createdAt
+      // Alias kompatibilitas
+      id: record.tiket,
+      name: record.nama,
+      bidang: record.unitKerja,
+      date: record.tanggal,
+      photo: uploadPhoto
     };
 
-    // Text/plain avoids CORS preflight OPTIONS in browser
-    await fetch(GOOGLE_SCRIPT_URL, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'text/plain;charset=utf-8'
-      },
-      body: JSON.stringify(payload)
-    });
-
-    console.log('Data permohonan berhasil dikirim ke Google Apps Script:', record.id);
+    await postToAppsScript(payload);
   } catch (err) {
-    console.warn('Gagal sinkron ke Google Apps Script, data aman di localStorage:', err);
+    console.warn('Pengajuan disimpan di lokal, gagal kirim ke backend:', err);
   }
 }
 
-async function updateStatusOnBackend(id, newStatus) {
-  try {
-    const payload = {
-      action: 'update_status',
-      id: id,
-      status: newStatus
-    };
-
-    await fetch(GOOGLE_SCRIPT_URL, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'text/plain;charset=utf-8'
-      },
-      body: JSON.stringify(payload)
-    });
-
-    console.log(`Status ${id} berhasil dikirim ke Google Sheets:`, newStatus);
-  } catch (err) {
-    console.warn('Gagal update status di backend:', err);
-  }
-}
-
+/**
+ * 5.2.2 Action: "update"
+ * Menyertakan nilai no_hp / whatsapp dalam payload JSON action: "update"
+ */
 async function updateRecordOnBackend(record) {
   try {
-    let uploadPhoto = record.photo;
+    let uploadPhoto = record.foto || record.photo || DEFAULT_TABLE_AVATAR;
     if (uploadPhoto && uploadPhoto.startsWith('data:image')) {
-      uploadPhoto = await optimizePhotoForUpload(uploadPhoto, 500);
+      uploadPhoto = await optimizePhotoForUpload(uploadPhoto, 600);
     }
+
+    const contactPhone = String(record.no_hp || record.whatsapp || '').trim();
 
     const payload = {
       action: 'update',
-      id: record.id,
-      name: record.name,
+      tiket: record.tiket,
+      tanggal: record.tanggal,
+      nama: record.nama,
       nip: record.nip,
-      bidang: record.bidang,
+      no_hp: contactPhone,
+      whatsapp: contactPhone,
+      unitKerja: record.unitKerja,
       jabatan: record.jabatan,
-      date: record.date,
-      photoReady: record.photoReady,
-      photo: uploadPhoto,
-      status: record.status
+      foto: uploadPhoto,
+      status: record.status,
+      // Alias kompatibilitas
+      id: record.tiket,
+      name: record.nama,
+      bidang: record.unitKerja,
+      date: record.tanggal,
+      photo: uploadPhoto
     };
 
-    await fetch(GOOGLE_SCRIPT_URL, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'text/plain;charset=utf-8'
-      },
-      body: JSON.stringify(payload)
-    });
-
-    console.log('Data pegawai berhasil diupdate di backend:', record.id);
+    await postToAppsScript(payload);
   } catch (err) {
-    console.warn('Gagal update data pegawai di backend:', err);
+    console.warn('Pembaruan disimpan di lokal, gagal kirim ke backend:', err);
   }
 }
 
-async function deleteRecordOnBackend(id) {
+/**
+ * 5.2.3 Action: "delete"
+ */
+async function deleteRecordOnBackend(tiket) {
   try {
-    const payload = {
+    await postToAppsScript({
       action: 'delete',
-      id: id
-    };
-
-    await fetch(GOOGLE_SCRIPT_URL, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'text/plain;charset=utf-8'
-      },
-      body: JSON.stringify(payload)
+      tiket: tiket,
+      id: tiket
     });
-
-    console.log('Record berhasil dihapus di backend:', id);
   } catch (err) {
-    console.warn('Gagal menghapus data di backend:', err);
+    console.warn('Penghapusan dilakukan di lokal, gagal hapus di backend:', err);
   }
 }
 
-function optimizePhotoForUpload(dataUrl, maxDim = 500) {
+function optimizePhotoForUpload(dataUrl, maxDim = 600) {
   return new Promise(resolve => {
     const img = new Image();
     img.onload = () => {
@@ -347,49 +452,88 @@ function optimizePhotoForUpload(dataUrl, maxDim = 500) {
       canvas.height = h;
       const ctx = canvas.getContext('2d');
       ctx.drawImage(img, 0, 0, w, h);
-      resolve(canvas.toDataURL('image/png', 0.85));
+      resolve(canvas.toDataURL('image/png', 0.88));
     };
     img.onerror = () => resolve(dataUrl);
     img.src = dataUrl;
   });
 }
 
-// -------------------------------------------------------------
-// INITIALIZATION
-// -------------------------------------------------------------
-document.addEventListener('DOMContentLoaded', () => {
-  loadDataFromStorage();
-  loadUnits();
-  loadBackSettings();
-  setupDragAndDrop();
-  setDefaultDate();
-  populateUnitDropdowns();
-  updateLivePreview();
-  renderDashboardTable();
-  updateStats();
-  updateAdminUI();
+// ============================================================================
+// PENYIMPANAN LOKAL & NORMALISASI DATA
+// ============================================================================
 
-  const hash = window.location.hash.replace('#', '');
-  if (['tata-cara', 'formulir', 'dashboard', 'admin'].includes(hash)) {
-    switchTab(hash);
-  } else {
-    switchTab('tata-cara');
+function normalizeRecord(raw) {
+  const tiket = String(raw.tiket || raw.id || generateTicketCode()).trim();
+  const tanggal = String(raw.tanggal || raw.date || getTodayDateString()).split(' ')[0].trim();
+  const nama = String(raw.nama || raw.name || '').trim();
+  const nip = String(raw.nip || '').replace(/^'/, '').trim();
+  const no_hp = String(raw.no_hp || raw.whatsapp || raw.noHp || '').replace(/^'/, '').trim();
+  const unitKerja = String(raw.unitKerja || raw.bidang || '').trim();
+  const jabatan = String(raw.jabatan || '').trim();
+  const rawFoto = raw.foto || raw.photo || '';
+
+  const isOfficeOption = (
+    raw.photoReady === 'not_ready' ||
+    !rawFoto ||
+    rawFoto === 'null' ||
+    rawFoto === DEFAULT_TABLE_AVATAR
+  );
+
+  const foto = isOfficeOption ? DEFAULT_TABLE_AVATAR : String(rawFoto);
+  const status = String(raw.status || 'Menunggu Verifikasi').trim();
+
+  return {
+    tiket,
+    id: tiket,
+    tanggal,
+    date: tanggal,
+    nama,
+    name: nama,
+    nip,
+    no_hp,
+    whatsapp: no_hp,
+    unitKerja,
+    bidang: unitKerja,
+    jabatan,
+    foto,
+    photo: foto,
+    photoReady: isOfficeOption ? 'not_ready' : 'ready',
+    status,
+    createdAt: raw.createdAt || tanggal
+  };
+}
+
+/**
+ * Helper: Mendapatkan URL foto untuk ditampilkan pada Tabel Dashboard Status
+ * - Pegawai dengan Opsi "Foto di Kantor": tampilkan avatar/siluet kosong default netral (`assets/default-avatar.png`)
+ * - Pegawai dengan Opsi "Unggah Foto Mandiri": tampilkan thumbnail foto asli pegawai yang diunggah dan diproses
+ */
+function getTableAvatarSrc(record) {
+  if (!record || record.photoReady === 'not_ready' || !record.foto || record.foto === 'null' || record.foto === DEFAULT_TABLE_AVATAR) {
+    return DEFAULT_TABLE_AVATAR;
   }
+  return record.foto;
+}
 
-  // Auto-sync with Google Apps Script backend on load
-  syncWithBackend(true);
-});
+/**
+ * Helper: Mendapatkan URL foto untuk ditampilkan pada Kartu ID (Live Preview & Cetak)
+ * - Jika belum ada foto unggahan mandiri (atau memilih "Opsi Foto di Kantor"), tampilkan sampel foto setengah badan PNG transparan (`assets/sample_pegawai_setengah_badan.png`)
+ */
+function getCardPhotoSrc(record) {
+  if (!record || record.photoReady === 'not_ready' || !record.foto || record.foto === 'null' || record.foto === DEFAULT_TABLE_AVATAR) {
+    return DEFAULT_CARD_SAMPLE_PHOTO;
+  }
+  return record.foto;
+}
 
-// -------------------------------------------------------------
-// STORAGE HELPERS
-// -------------------------------------------------------------
 function loadDataFromStorage() {
   const saved = localStorage.getItem(STORAGE_KEY);
   if (saved) {
     try {
-      idCardRecords = JSON.parse(saved);
+      const parsed = JSON.parse(saved);
+      idCardRecords = Array.isArray(parsed) ? parsed.map(normalizeRecord) : [...DEFAULT_DEMO_RECORDS];
     } catch (e) {
-      console.error('Error parsing stored records:', e);
       idCardRecords = [...DEFAULT_DEMO_RECORDS];
     }
   } else {
@@ -403,16 +547,29 @@ function saveDataToStorage() {
   updateStats();
 }
 
-// -------------------------------------------------------------
-// TAB NAVIGATION
-// -------------------------------------------------------------
+function generateTicketCode() {
+  const randomDigits = Math.floor(1000 + Math.random() * 9000);
+  return `KMN-2026-${randomDigits}`;
+}
+
+function getTodayDateString() {
+  const now = new Date();
+  const y = now.getFullYear();
+  const m = String(now.getMonth() + 1).padStart(2, '0');
+  const d = String(now.getDate()).padStart(2, '0');
+  return `${y}-${m}-${d}`;
+}
+
+// ============================================================================
+// NAVIGASI TAB & PEMBAGIAN MODE AKSES (BAGIAN 2 PRD)
+// ============================================================================
+
 function switchTab(tabId) {
   if (tabId === 'admin' && !isAdminLoggedIn()) {
     openAdminLoginModal();
     return;
   }
 
-  // Toggle Header visibility: Show #header-admin only if tabId === 'admin'
   const headerPublic = document.getElementById('header-public');
   const headerAdmin = document.getElementById('header-admin');
 
@@ -424,24 +581,16 @@ function switchTab(tabId) {
     if (headerPublic) headerPublic.classList.remove('hidden');
   }
 
-  document.querySelectorAll('.tab-pane').forEach(el => {
-    el.classList.remove('active');
-  });
-
+  document.querySelectorAll('.tab-pane').forEach(el => el.classList.remove('active'));
   const activePane = document.getElementById(`tab-${tabId}`);
-  if (activePane) {
-    activePane.classList.add('active');
-  }
+  if (activePane) activePane.classList.add('active');
 
-  const navTabs = ['tata-cara', 'formulir', 'dashboard', 'admin'];
-  navTabs.forEach(t => {
+  ['tata-cara', 'formulir', 'dashboard'].forEach(t => {
     const btn = document.getElementById(`nav-btn-${t}`);
     if (btn) {
-      if (t === tabId) {
-        btn.className = 'nav-item flex items-center space-x-1.5 px-3.5 py-1.5 rounded-xl font-bold text-xs transition-all duration-200 text-white bg-emerald-700 shadow-xs';
-      } else {
-        btn.className = 'nav-item flex items-center space-x-1.5 px-3.5 py-1.5 rounded-xl font-semibold text-xs transition-all duration-200 text-slate-600 hover:text-emerald-800 hover:bg-white/60';
-      }
+      btn.className = (t === tabId)
+        ? 'nav-item flex items-center space-x-1.5 px-4 py-2 rounded-xl font-bold text-xs transition-all duration-200 text-white bg-emerald-700 shadow-xs'
+        : 'nav-item flex items-center space-x-1.5 px-4 py-2 rounded-xl font-semibold text-xs transition-all duration-200 text-slate-600 hover:text-emerald-800 hover:bg-white/60';
     }
   });
 
@@ -449,11 +598,14 @@ function switchTab(tabId) {
 
   if (tabId === 'dashboard') {
     renderDashboardTable();
+  } else if (tabId === 'formulir') {
+    updateLivePreview();
   } else if (tabId === 'admin') {
     switchAdminSubTab(currentAdminSubTab || 'requests');
     renderAdminTable();
     renderAdminUnitsList();
-    applyBackSettings();
+    applyConfigToUI();
+    renderAdminAccountsTable();
   }
 
   window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -461,93 +613,190 @@ function switchTab(tabId) {
 
 function toggleMobileMenu() {
   const menu = document.getElementById('mobile-menu');
-  if (menu.classList.contains('hidden')) {
-    menu.classList.remove('hidden');
-  } else {
-    menu.classList.add('hidden');
-  }
+  if (menu) menu.classList.toggle('hidden');
 }
 
-// -------------------------------------------------------------
-// FORM DATE & PHOTO TOGGLE
-// -------------------------------------------------------------
+function toggleAdminMobileMenu() {
+  const menu = document.getElementById('admin-mobile-menu');
+  if (menu) menu.classList.toggle('hidden');
+}
+
+// ============================================================================
+// 3.1 MODUL FORMULIR PENGAJUAN, VALIDASI INPUT, PASFOTO & LIVE PREVIEW
+// ============================================================================
+
 function setDefaultDate() {
   const dateInput = document.getElementById('form-date');
-  if (dateInput && !dateInput.value) {
-    dateInput.value = '2023-08-01';
+  if (dateInput) {
+    dateInput.value = getTodayDateString();
   }
 }
 
-function togglePhotoUploadSection(isReady) {
+function togglePhotoUploadSection(isUploadMode) {
   const photoSection = document.getElementById('section-photo-upload');
+  const labelReady = document.getElementById('label-photo-ready');
+  const labelOffice = document.getElementById('label-photo-office');
+  const statusBadge = document.getElementById('photo-upload-status-badge');
+
   if (photoSection) {
-    if (isReady) {
-      photoSection.classList.remove('opacity-40', 'pointer-events-none');
+    if (isUploadMode) {
+      // Ketika memilih "Unggah Foto Mandiri": tampilkan kembali seluruh area unggah foto & panel pengaturannya
+      photoSection.style.display = 'block';
+      photoSection.classList.remove('hidden');
     } else {
-      photoSection.classList.add('opacity-40', 'pointer-events-none');
+      // Ketika memilih "Opsi Foto di Kantor": sembunyikan (CSS display: none;) seluruh area kontainer langkah ke-2
+      photoSection.style.display = 'none';
+      photoSection.classList.add('hidden');
+      hidePhotoValidationError();
+    }
+  }
+
+  if (labelReady && labelOffice) {
+    if (isUploadMode) {
+      labelReady.className = 'flex items-start space-x-3 p-3.5 rounded-2xl border-2 border-emerald-600 bg-emerald-50/40 cursor-pointer transition';
+      labelOffice.className = 'flex items-start space-x-3 p-3.5 rounded-2xl border-2 border-slate-200 hover:border-emerald-300 bg-white cursor-pointer transition';
+    } else {
+      labelReady.className = 'flex items-start space-x-3 p-3.5 rounded-2xl border-2 border-slate-200 hover:border-emerald-300 bg-white cursor-pointer transition';
+      labelOffice.className = 'flex items-start space-x-3 p-3.5 rounded-2xl border-2 border-emerald-600 bg-emerald-50/40 cursor-pointer transition';
+    }
+  }
+
+  if (statusBadge && isUploadMode) {
+    if (userHasUploadedPhoto) {
+      statusBadge.textContent = 'Foto Siap';
+      statusBadge.className = 'text-[10px] px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-800 font-bold';
+    } else {
+      statusBadge.textContent = 'Foto Sampel Default';
+      statusBadge.className = 'text-[10px] px-2.5 py-1 rounded-full bg-amber-100 text-amber-800 font-bold';
     }
   }
 }
 
-// -------------------------------------------------------------
-// LIVE PREVIEW SYNCHRONIZATION (EXACT TEMPLATE TYPOGRAPHY)
-// -------------------------------------------------------------
+function handlePhotoRatioChange(ratio) {
+  currentFormPhotoRatio = ratio;
+  updateLivePreview();
+}
+
+function applyPhotoRatioClass(layerEl) {
+  if (!layerEl) return;
+  layerEl.classList.remove('ratio-3-4', 'ratio-1-1', 'ratio-cutout');
+}
+
+function applyCardTemplateVisuals(frontCardEl, backCardEl) {
+  const tpl = appConfig.template_aktif || 'template_1';
+
+  if (frontCardEl) {
+    frontCardEl.classList.remove('theme-template_1', 'theme-template_2', 'theme-template_3');
+    frontCardEl.classList.add(`theme-${tpl}`);
+    if (appConfig.bg_depan_url) {
+      frontCardEl.style.backgroundImage = `url('${appConfig.bg_depan_url}')`;
+    } else {
+      frontCardEl.style.backgroundImage = '';
+    }
+  }
+
+  if (backCardEl) {
+    backCardEl.classList.remove('theme-template_1', 'theme-template_2', 'theme-template_3');
+    backCardEl.classList.add(`theme-${tpl}`);
+    if (appConfig.bg_belakang_url) {
+      backCardEl.style.backgroundImage = `url('${appConfig.bg_belakang_url}')`;
+    } else {
+      backCardEl.style.backgroundImage = '';
+    }
+  }
+}
+
+/**
+ * Menggabungkan Biodata Pegawai + Konfigurasi Pimpinan & Template pada Live Preview
+ */
 function updateLivePreview() {
-  const fullName = document.getElementById('form-name').value.trim() || 'Rahmat Hidayat, S.Kom, M.M.';
-  const nip = document.getElementById('form-nip').value.trim() || '198804122014021003';
-  const jabatan = document.getElementById('form-jabatan').value.trim() || 'Pranata Komputer Ahli Muda';
-  const bidang = document.getElementById('form-bidang').value || 'Sub Bagian Perencanaan, Data & Informasi';
-  const rawDate = document.getElementById('form-date').value || '2026-10-14';
-  const photoReady = document.querySelector('input[name="photo_ready"]:checked')?.value || 'ready';
+  const rawName = (document.getElementById('form-name')?.value || '').trim();
+  const rawNip = (document.getElementById('form-nip')?.value || '').trim();
+  const rawJabatan = (document.getElementById('form-jabatan')?.value || '').trim();
+  const rawBidang = document.getElementById('form-bidang')?.value || kemenagUnits[0] || 'Sub Bagian Perencanaan, Data & Informasi';
+  const rawDate = document.getElementById('form-date')?.value || getTodayDateString();
+  const photoOption = document.querySelector('input[name="photo_ready"]:checked')?.value || 'ready';
 
-  // Front Card
-  const frontName = fullName.toUpperCase();
-  document.getElementById('preview-name').textContent = frontName;
-  document.getElementById('preview-nip').textContent = `NIP. ${nip}`;
+  const displayName = rawName || 'NAMA LENGKAP PEGAWAI';
+  const displayNip = rawNip || '198804122014021003';
+  const displayJabatan = rawJabatan || 'Jabatan Pegawai';
 
+  const frontCard = document.getElementById('card-preview-front');
+  const backCard = document.getElementById('card-preview-back');
+  applyCardTemplateVisuals(frontCard, backCard);
+
+  // Label Template Aktif
+  const tplLabel = document.getElementById('live-preview-template-label');
+  if (tplLabel) {
+    const names = {
+      template_1: 'Template Standar Kemenag',
+      template_2: 'Template Modern Hijau',
+      template_3: 'Template Kustom'
+    };
+    tplLabel.textContent = names[appConfig.template_aktif] || 'Template Standar Kemenag';
+  }
+
+  // Sisi Depan
+  const prevName = document.getElementById('preview-name');
+  const prevNip = document.getElementById('preview-nip');
+  if (prevName) prevName.textContent = displayName.toUpperCase();
+  if (prevNip) prevNip.textContent = `NIP. ${displayNip}`;
+
+  // Penanganan Pasfoto pada Live Preview (Menyatu Natural Tanpa Kotak Putih Kaku)
   const photoLayer = document.getElementById('preview-photo-layer');
-  const placeholderLayer = document.getElementById('preview-photo-placeholder');
   const previewPhoto = document.getElementById('preview-photo');
+  applyPhotoRatioClass(photoLayer);
 
-  if (photoReady === 'not_ready') {
-    if (photoLayer) photoLayer.classList.add('hidden');
-    if (placeholderLayer) placeholderLayer.classList.remove('hidden');
-  } else {
-    if (photoLayer) photoLayer.classList.remove('hidden');
-    if (placeholderLayer) placeholderLayer.classList.add('hidden');
-    if (previewPhoto) {
+  if (previewPhoto) {
+    if (photoOption === 'not_ready') {
+      // Opsi Foto di Kantor -> Tampilkan sampel foto pegawai setengah badan PNG transparan yang menyatu rapi dengan latar kartu
+      previewPhoto.src = DEFAULT_CARD_SAMPLE_PHOTO;
+      previewPhoto.style.transform = 'none';
+    } else if (!userHasUploadedPhoto || !processedPhotoData) {
+      // Unggah Foto Mandiri (belum memilih berkas) -> Tampilkan sampel setengah badan PNG transparan & dukung slider
+      previewPhoto.src = DEFAULT_CARD_SAMPLE_PHOTO;
+      previewPhoto.style.transform = `scale(${photoScale / 100}) translateY(${photoOffset}px)`;
+    } else {
+      // Unggah Foto Mandiri -> Tampilkan foto asli hasil pemotongan latar belakang transparan secara proporsional
       previewPhoto.src = processedPhotoData;
       previewPhoto.style.transform = `scale(${photoScale / 100}) translateY(${photoOffset}px)`;
     }
+    previewPhoto.style.objectFit = 'contain';
+    previewPhoto.style.objectPosition = 'bottom left';
   }
 
-  // Hero Card on Landing Page
-  const heroName = document.getElementById('hero-preview-name');
-  if (heroName) heroName.textContent = frontName;
-  const heroNip = document.getElementById('hero-preview-nip');
-  if (heroNip) heroNip.textContent = `NIP. ${nip}`;
-  const heroPhoto = document.getElementById('hero-preview-photo');
-  if (heroPhoto) heroPhoto.src = processedPhotoData;
-
-  // Back Card (100% Roboto-Bold 12.5px #1a2c44)
-  document.getElementById('back-preview-name').textContent = fullName;
-  document.getElementById('back-preview-nip').textContent = nip;
-  document.getElementById('back-preview-jabatan').textContent = jabatan;
-  document.getElementById('back-preview-bidang').textContent = bidang;
-  document.getElementById('back-preview-date').textContent = `Banjarmasin, ${formatIndonesianDate(rawDate)}`;
-
-  // Dynamic back settings (Officials & Address)
+  // Sisi Belakang (Biodata + Konfigurasi Pimpinan Dinamis, tanpa teks aturan & masa berlaku)
+  const bName = document.getElementById('back-preview-name');
+  const bNip = document.getElementById('back-preview-nip');
+  const bJabatan = document.getElementById('back-preview-jabatan');
+  const bBidang = document.getElementById('back-preview-bidang');
+  const bDate = document.getElementById('back-preview-date');
   const bAlamat1 = document.getElementById('back-preview-alamat1');
   const bAlamat2 = document.getElementById('back-preview-alamat2');
   const bKepalaTitle = document.getElementById('back-preview-kepala-title');
   const bKepalaName = document.getElementById('back-preview-kepala-name');
   const bKepalaNip = document.getElementById('back-preview-kepala-nip');
+  const bTtdImg = document.getElementById('back-preview-ttd-img');
 
-  if (bAlamat1) bAlamat1.textContent = cardBackSettings.alamat1;
-  if (bAlamat2) bAlamat2.textContent = cardBackSettings.alamat2;
-  if (bKepalaTitle) bKepalaTitle.textContent = cardBackSettings.kepalaTitle;
-  if (bKepalaName) bKepalaName.textContent = cardBackSettings.kepalaName;
-  if (bKepalaNip) bKepalaNip.textContent = `NIP. ${cardBackSettings.kepalaNip}`;
+  if (bName) bName.textContent = displayName;
+  if (bNip) bNip.textContent = displayNip;
+  if (bJabatan) bJabatan.textContent = displayJabatan;
+  if (bBidang) bBidang.textContent = rawBidang;
+  if (bDate) bDate.textContent = `Banjarmasin, ${formatIndonesianDate(rawDate)}`;
+  if (bAlamat1) bAlamat1.textContent = appConfig.alamat_kantor_1;
+  if (bAlamat2) bAlamat2.textContent = appConfig.alamat_kantor_2;
+  if (bKepalaTitle) bKepalaTitle.textContent = appConfig.jabatan_pimpinan;
+  if (bKepalaName) bKepalaName.textContent = appConfig.nama_pimpinan;
+  if (bKepalaNip) bKepalaNip.textContent = `NIP. ${appConfig.nip_pimpinan}`;
+
+  if (bTtdImg) {
+    if (appConfig.ttd_pimpinan_url) {
+      bTtdImg.src = appConfig.ttd_pimpinan_url;
+      bTtdImg.classList.remove('hidden');
+    } else {
+      bTtdImg.classList.add('hidden');
+    }
+  }
 }
 
 function switchPreviewSide(side) {
@@ -570,28 +819,68 @@ function switchPreviewSide(side) {
 }
 
 function formatIndonesianDate(dateStr) {
-  if (!dateStr) return '14 Oktober 2026';
-  const parts = dateStr.split('-');
+  if (!dateStr) return '19 Oktober 2026';
+  const parts = String(dateStr).split('-');
   if (parts.length !== 3) return dateStr;
-
   const months = [
     'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
     'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'
   ];
-
   const year = parts[0];
   const monthIdx = parseInt(parts[1], 10) - 1;
   const day = parseInt(parts[2], 10);
-
   return `${day} ${months[monthIdx] || ''} ${year}`;
 }
 
-// -------------------------------------------------------------
-// SMART BACKGROUND REMOVER (CANVAS BFS FLOOD-FILL)
-// -------------------------------------------------------------
+// ============================================================================
+// VALIDASI BERKAS FOTO (.JPG, .JPEG, .PNG MAKS 2 MB) & PEMBACAAN FILEREADER
+// ============================================================================
+
+function validatePhotoFileObject(file) {
+  if (!file) {
+    return { valid: false, message: 'Berkas foto tidak ditemukan.' };
+  }
+
+  const fileName = (file.name || '').toLowerCase();
+  const hasValidExt = ALLOWED_EXTENSIONS.some(ext => fileName.endsWith(ext));
+  const hasValidMime = ALLOWED_MIME_TYPES.includes(file.type);
+
+  if (!hasValidExt || !hasValidMime) {
+    return {
+      valid: false,
+      message: 'Format berkas ditolak! Hanya diizinkan format .jpg, .jpeg, atau .png.'
+    };
+  }
+
+  if (file.size > MAX_PHOTO_SIZE_BYTES) {
+    const sizeMB = (file.size / (1024 * 1024)).toFixed(2);
+    return {
+      valid: false,
+      message: `Ukuran berkas (${sizeMB} MB) melebihi batas maksimal 2 MB!`
+    };
+  }
+
+  return { valid: true };
+}
+
+function showPhotoValidationError(msg) {
+  const errBox = document.getElementById('photo-validation-error');
+  const errText = document.getElementById('photo-validation-error-text');
+  if (errBox && errText) {
+    errText.textContent = msg;
+    errBox.classList.remove('hidden');
+  }
+}
+
+function hidePhotoValidationError() {
+  const errBox = document.getElementById('photo-validation-error');
+  if (errBox) errBox.classList.add('hidden');
+}
+
 function setupDragAndDrop() {
   const dropZone = document.getElementById('drop-zone');
   const fileInput = document.getElementById('form-photo-input');
+  if (!dropZone || !fileInput) return;
 
   dropZone.addEventListener('click', () => fileInput.click());
 
@@ -611,7 +900,7 @@ function setupDragAndDrop() {
 
   dropZone.addEventListener('drop', (e) => {
     const dt = e.dataTransfer;
-    if (dt.files.length > 0) {
+    if (dt && dt.files && dt.files.length > 0) {
       processPhotoFile(dt.files[0]);
     }
   });
@@ -625,27 +914,55 @@ function handlePhotoUpload(event) {
 }
 
 function processPhotoFile(file) {
-  if (!file.type.startsWith('image/')) {
-    alert('Harap pilih file gambar (JPG, PNG, atau WEBP).');
+  hidePhotoValidationError();
+  const check = validatePhotoFileObject(file);
+
+  if (!check.valid) {
+    showPhotoValidationError(check.message);
+    showToast(check.message);
+    const fileInput = document.getElementById('form-photo-input');
+    if (fileInput) fileInput.value = '';
     return;
   }
 
-  if (file.size > 5 * 1024 * 1024) {
-    alert('Ukuran gambar terlalu besar. Maksimum 5MB.');
-    return;
-  }
-
+  // Baca berkas gambar menggunakan FileReader menjadi Base64 Data URL (PRD 3.1.2)
   const reader = new FileReader();
   reader.onload = (e) => {
     rawUploadedPhotoData = e.target.result;
+    processedPhotoData = e.target.result;
     userHasUploadedPhoto = true;
-    runSmartBackgroundRemoval();
+
+    const statusBadge = document.getElementById('photo-upload-status-badge');
+    if (statusBadge) {
+      statusBadge.textContent = 'Foto Siap';
+      statusBadge.className = 'text-[10px] px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-800 font-bold';
+    }
+
+    const dropFilename = document.getElementById('drop-zone-filename');
+    if (dropFilename) {
+      dropFilename.textContent = `Berkas terpilih: ${file.name} (${Math.round(file.size / 1024)} KB)`;
+    }
+
+    const bgRemovalToggle = document.getElementById('toggle-bg-removal');
+    if (bgRemovalToggle && bgRemovalToggle.checked) {
+      runSmartBackgroundRemoval();
+    } else {
+      updateLivePreview();
+    }
   };
   reader.readAsDataURL(file);
 }
 
 function toggleBackgroundRemoval() {
-  const isEnabled = document.getElementById('toggle-bg-removal').checked;
+  const isEnabled = document.getElementById('toggle-bg-removal')?.checked;
+  const controls = document.getElementById('bg-remover-controls');
+  if (controls) {
+    if (isEnabled) controls.classList.remove('hidden');
+    else controls.classList.add('hidden');
+  }
+
+  if (!userHasUploadedPhoto || !rawUploadedPhotoData) return;
+
   if (!isEnabled) {
     processedPhotoData = rawUploadedPhotoData;
     updateLivePreview();
@@ -656,7 +973,7 @@ function toggleBackgroundRemoval() {
 
 function updateTolerance(val) {
   document.getElementById('tolerance-val').textContent = val;
-  runSmartBackgroundRemoval();
+  if (userHasUploadedPhoto) runSmartBackgroundRemoval();
 }
 
 function updatePhotoScale(val) {
@@ -672,8 +989,8 @@ function updatePhotoOffset(val) {
 }
 
 function runSmartBackgroundRemoval() {
-  const isEnabled = document.getElementById('toggle-bg-removal').checked;
-  if (!isEnabled) {
+  const isEnabled = document.getElementById('toggle-bg-removal')?.checked;
+  if (!isEnabled || !rawUploadedPhotoData) {
     processedPhotoData = rawUploadedPhotoData;
     updateLivePreview();
     return;
@@ -685,7 +1002,7 @@ function runSmartBackgroundRemoval() {
     const canvas = document.getElementById('bg-processor-canvas');
     const ctx = canvas.getContext('2d');
 
-    const maxDim = 800;
+    const maxDim = 750;
     let w = img.width;
     let h = img.height;
     if (w > maxDim || h > maxDim) {
@@ -700,113 +1017,108 @@ function runSmartBackgroundRemoval() {
 
     canvas.width = w;
     canvas.height = h;
+    ctx.clearRect(0, 0, w, h);
     ctx.drawImage(img, 0, 0, w, h);
 
     const imgData = ctx.getImageData(0, 0, w, h);
     const data = imgData.data;
 
-    // Preserve image if already transparent
-    let hasTransparency = false;
-    for (let i = 3; i < data.length; i += 4) {
-      if (data[i] < 200) {
-        hasTransparency = true;
-        break;
-      }
+    const mode = document.getElementById('bg-color-mode')?.value || 'auto';
+    const tolerance = parseInt(document.getElementById('bg-tolerance')?.value || '35', 10);
+    const customContainer = document.getElementById('custom-color-container');
+    if (customContainer) {
+      if (mode === 'custom') customContainer.classList.remove('hidden');
+      else customContainer.classList.add('hidden');
     }
 
-    if (hasTransparency) {
+    // Jika gambar unggahan sudah berlatar transparan (PNG transparan) pada mode auto, pertahankan transparansinya
+    const topLeftAlpha = data[3];
+    const topRightAlpha = data[(w - 1) * 4 + 3];
+    if (mode === 'auto' && topLeftAlpha < 50 && topRightAlpha < 50) {
       processedPhotoData = canvas.toDataURL('image/png');
       updateLivePreview();
       return;
     }
 
-    const mode = document.getElementById('bg-color-mode').value;
-    const tolerance = parseInt(document.getElementById('bg-tolerance').value, 10);
-    const customContainer = document.getElementById('custom-color-container');
-
-    if (mode === 'custom') {
-      customContainer.classList.remove('hidden');
-    } else {
-      customContainer.classList.add('hidden');
-    }
-
-    let targetR = 0, targetG = 0, targetB = 0;
-
+    let targetR = 255, targetG = 255, targetB = 255;
     if (mode === 'auto') {
       let rSum = 0, gSum = 0, bSum = 0, count = 0;
       const samplePoints = [
-        [0, 0], [1, 0], [2, 0], [w - 1, 0], [w - 2, 0],
-        [0, 1], [w - 1, 1], [0, h - 1], [w - 1, h - 1],
-        [Math.floor(w / 4), 0], [Math.floor(w / 2), 0], [Math.floor(3 * w / 4), 0]
+        [0, 0], [2, 2], [w - 1, 0], [w - 3, 2],
+        [0, Math.floor(h * 0.15)], [w - 1, Math.floor(h * 0.15)],
+        [Math.floor(w * 0.2), 0], [Math.floor(w * 0.8), 0]
       ];
-
-      samplePoints.forEach(([x, y]) => {
+      samplePoints.forEach(([sx, sy]) => {
+        const x = Math.max(0, Math.min(w - 1, sx));
+        const y = Math.max(0, Math.min(h - 1, sy));
         const idx = (y * w + x) * 4;
-        rSum += data[idx];
-        gSum += data[idx + 1];
-        bSum += data[idx + 2];
-        count++;
+        if (data[idx + 3] > 128) {
+          rSum += data[idx];
+          gSum += data[idx + 1];
+          bSum += data[idx + 2];
+          count++;
+        }
       });
-
-      targetR = rSum / count;
-      targetG = gSum / count;
-      targetB = bSum / count;
+      if (count > 0) {
+        targetR = rSum / count;
+        targetG = gSum / count;
+        targetB = bSum / count;
+      }
     } else if (mode === 'blue') {
       targetR = 30; targetG = 90; targetB = 180;
     } else if (mode === 'red') {
       targetR = 190; targetG = 30; targetB = 30;
     } else if (mode === 'white') {
-      targetR = 240; targetG = 240; targetB = 240;
+      targetR = 248; targetG = 248; targetB = 248;
     } else if (mode === 'custom') {
-      const hex = document.getElementById('bg-custom-color').value;
-      document.getElementById('custom-color-hex').textContent = hex;
+      const hex = document.getElementById('bg-custom-color')?.value || '#ffffff';
+      const hexLabel = document.getElementById('custom-color-hex');
+      if (hexLabel) hexLabel.textContent = hex;
       const rgb = hexToRgb(hex);
       targetR = rgb.r; targetG = rgb.g; targetB = rgb.b;
     }
 
+    // Flood-fill dari tepi atas, tepi kiri atas, dan tepi kanan atas
+    // Jangan memulai flood-fill dari tepi bawah (y = h - 1) agar baju putih pegawai tidak ikut terhapus
     const visited = new Uint8Array(w * h);
     const queue = [];
-
     for (let x = 0; x < w; x++) {
       queue.push(x, 0);
-      queue.push(x, h - 1);
     }
-    for (let y = 0; y < h; y++) {
+    const sideMaxY = Math.floor(h * 0.88);
+    for (let y = 0; y < sideMaxY; y++) {
       queue.push(0, y);
       queue.push(w - 1, y);
     }
 
-    const featherDist = 12;
+    const effectiveTolerance = (mode === 'white' || (mode === 'auto' && targetR > 225 && targetG > 225 && targetB > 225))
+      ? Math.max(tolerance, 38)
+      : tolerance;
+    const featherDist = 14;
 
     let qHead = 0;
     while (qHead < queue.length) {
       const cx = queue[qHead++];
       const cy = queue[qHead++];
       const cIdx = cy * w + cx;
-
       if (visited[cIdx]) continue;
       visited[cIdx] = 1;
 
       const pIdx = cIdx * 4;
-      const pr = data[pIdx];
-      const pg = data[pIdx + 1];
-      const pb = data[pIdx + 2];
-
-      const dr = pr - targetR;
-      const dg = pg - targetG;
-      const db = pb - targetB;
+      const dr = data[pIdx] - targetR;
+      const dg = data[pIdx + 1] - targetG;
+      const db = data[pIdx + 2] - targetB;
       const dist = Math.sqrt(dr * dr + dg * dg + db * db);
 
-      if (dist <= tolerance) {
+      if (dist <= effectiveTolerance) {
         data[pIdx + 3] = 0;
-
         if (cx + 1 < w && !visited[cy * w + (cx + 1)]) queue.push(cx + 1, cy);
         if (cx - 1 >= 0 && !visited[cy * w + (cx - 1)]) queue.push(cx - 1, cy);
         if (cy + 1 < h && !visited[(cy + 1) * w + cx]) queue.push(cx, cy + 1);
         if (cy - 1 >= 0 && !visited[(cy - 1) * w + cx]) queue.push(cx, cy - 1);
-      } else if (dist <= tolerance + featherDist) {
-        const alphaRatio = (dist - tolerance) / featherDist;
-        data[pIdx + 3] = Math.round(255 * alphaRatio);
+      } else if (dist <= effectiveTolerance + featherDist) {
+        const alphaRatio = (dist - effectiveTolerance) / featherDist;
+        data[pIdx + 3] = Math.min(data[pIdx + 3], Math.round(255 * alphaRatio));
       }
     }
 
@@ -814,7 +1126,6 @@ function runSmartBackgroundRemoval() {
     processedPhotoData = canvas.toDataURL('image/png');
     updateLivePreview();
   };
-
   img.src = rawUploadedPhotoData;
 }
 
@@ -827,84 +1138,225 @@ function hexToRgb(hex) {
   } : { r: 30, g: 90, b: 180 };
 }
 
-// Preset Photo Loaders for Quick Demo
-function loadPresetHalfBody() {
-  rawUploadedPhotoData = 'assets/sample_pegawai_setengah_badan.png';
-  processedPhotoData = 'assets/sample_pegawai_setengah_badan.png';
-  userHasUploadedPhoto = true;
-  document.getElementById('toggle-bg-removal').checked = true;
+// ============================================================================
+// VALIDASI INPUT FORMULIR & PENGIRIMAN PENGAJUAN (PRD 3.1.1 - 3.1.3)
+// ============================================================================
+
+function showFormValidationAlert(msg) {
+  const box = document.getElementById('form-validation-alert');
+  const text = document.getElementById('form-validation-alert-text');
+  if (box && text) {
+    text.textContent = msg;
+    box.classList.remove('hidden');
+    box.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  } else {
+    alert(msg);
+  }
+}
+
+function hideFormValidationAlert() {
+  const box = document.getElementById('form-validation-alert');
+  if (box) box.classList.add('hidden');
+}
+
+function validateNipInput(input) {
+  const rawVal = input.value;
+  const hasNonDigits = /[^0-9]/.test(rawVal);
+  const digitsOnly = rawVal.replace(/\D/g, '');
+
+  const badge = document.getElementById('nip-validation-badge');
+  const feedback = document.getElementById('nip-validation-feedback');
+  const iconStatus = document.getElementById('nip-icon-status');
+
+  if (badge) {
+    badge.textContent = `${digitsOnly.length}/18 Digit`;
+    badge.className = NIP_REGEX.test(rawVal.trim())
+      ? 'text-[10px] font-bold px-2 py-0.5 rounded-md bg-emerald-100 text-emerald-800 font-mono'
+      : 'text-[10px] font-bold px-2 py-0.5 rounded-md bg-amber-100 text-amber-800 font-mono';
+  }
+
+  if (feedback && iconStatus) {
+    if (hasNonDigits) {
+      feedback.textContent = 'Peringatan: NIP hanya boleh berisi angka numerik (0-9) tanpa spasi atau huruf!';
+      feedback.className = 'text-[11px] font-bold mt-1 text-rose-600';
+      iconStatus.innerHTML = '<i class="fa-solid fa-triangle-exclamation text-rose-600"></i>';
+    } else if (NIP_REGEX.test(rawVal.trim())) {
+      feedback.textContent = 'Format NIP valid: tepat 18 digit angka numerik.';
+      feedback.className = 'text-[11px] font-semibold mt-1 text-emerald-600';
+      iconStatus.innerHTML = '<i class="fa-solid fa-circle-check text-emerald-600"></i>';
+    } else if (rawVal.length > 0) {
+      feedback.textContent = `Peringatan: NIP harus tepat 18 digit angka (saat ini ${rawVal.length} digit).`;
+      feedback.className = 'text-[11px] font-semibold mt-1 text-amber-600';
+      iconStatus.innerHTML = '<i class="fa-solid fa-circle-exclamation text-amber-500"></i>';
+    } else {
+      feedback.textContent = 'Wajib berupa angka numerik tepat 18 digit tanpa spasi atau karakter selain angka.';
+      feedback.className = 'text-[11px] font-semibold mt-1 text-slate-500';
+      iconStatus.innerHTML = '<i class="fa-solid fa-hashtag text-slate-400"></i>';
+    }
+  }
+
   updateLivePreview();
-  showToast('Foto setengah badan resmi berhasil dimuat!');
 }
 
-function loadPresetBlueBg() {
-  rawUploadedPhotoData = 'assets/test_sample_with_bg.png';
-  userHasUploadedPhoto = true;
-  document.getElementById('bg-color-mode').value = 'blue';
-  document.getElementById('bg-tolerance').value = 40;
-  document.getElementById('tolerance-val').textContent = '40';
-  document.getElementById('toggle-bg-removal').checked = true;
-  runSmartBackgroundRemoval();
-  showToast('Foto latar biru dimuat & background langsung dihapus!');
+function validateNameInput(input) {
+  const badge = document.getElementById('name-validation-badge');
+  const val = input.value.trim();
+  if (badge) {
+    if (val.length >= 3) {
+      badge.textContent = 'Nama Valid';
+      badge.className = 'text-[10px] font-bold text-emerald-600';
+    } else {
+      badge.textContent = 'Wajib diisi';
+      badge.className = 'text-[10px] font-bold text-slate-400';
+    }
+  }
+  updateLivePreview();
 }
 
-// -------------------------------------------------------------
-// FORM SUBMISSION & SUCCESS FLOW
-// -------------------------------------------------------------
+function validatePhoneInput(input) {
+  if (!input) return;
+  const cleaned = (input.value || '').replace(/\D/g, '');
+  if (input.value !== cleaned) {
+    input.value = cleaned;
+  }
+  const badge = document.getElementById('phone-validation-badge');
+  if (badge) {
+    if (PHONE_REGEX.test(cleaned)) {
+      badge.textContent = 'Nomor Valid';
+      badge.className = 'text-[10px] font-bold px-2 py-0.5 rounded-md bg-emerald-100 text-emerald-800';
+    } else if (cleaned.length > 0) {
+      badge.textContent = `${cleaned.length} Digit`;
+      badge.className = 'text-[10px] font-bold px-2 py-0.5 rounded-md bg-amber-100 text-amber-800';
+    } else {
+      badge.textContent = 'Wajib diisi';
+      badge.className = 'text-[10px] font-bold px-2 py-0.5 rounded-md bg-slate-100 text-slate-600';
+    }
+  }
+}
+
 function handleFormSubmit(event) {
   event.preventDefault();
+  hideFormValidationAlert();
 
-  const name = document.getElementById('form-name').value.trim();
-  const nip = document.getElementById('form-nip').value.trim();
-  const bidang = document.getElementById('form-bidang').value;
-  const jabatan = document.getElementById('form-jabatan').value.trim();
-  const date = document.getElementById('form-date').value;
-  const photoReady = document.querySelector('input[name="photo_ready"]:checked')?.value || 'ready';
+  // 1. Pembersihan Teks (Sanitization) dengan .trim() (PRD 3.1.1)
+  const nama = (document.getElementById('form-name')?.value || '').trim();
+  const nip = (document.getElementById('form-nip')?.value || '').trim();
+  const no_hp = (document.getElementById('form-phone')?.value || '').replace(/\D/g, '').trim();
+  const unitKerja = (document.getElementById('form-bidang')?.value || '').trim();
+  const jabatan = (document.getElementById('form-jabatan')?.value || '').trim();
+  const tanggal = (document.getElementById('form-date')?.value || '').trim() || getTodayDateString();
+  const photoOption = document.querySelector('input[name="photo_ready"]:checked')?.value || '';
 
-  if (!name || !nip || !bidang || !jabatan || !date) {
-    alert('Harap lengkapi semua kolom bertanda bintang (*).');
+  // 2. Validasi Kelengkapan Kolom Wajib (termasuk Nomor HP / WhatsApp Pegawai)
+  if (!nama || !nip || !no_hp || !unitKerja || !jabatan || !photoOption) {
+    showFormValidationAlert('Seluruh kolom wajib (Nama Lengkap, NIP, Nomor HP / WhatsApp, Unit Kerja/Bidang, Jabatan, dan Opsi Foto) harus diisi sebelum formulir dikirim.');
     return;
   }
 
-  // Attach photo only if employee chose 'ready' AND actually uploaded/provided a photo
-  let finalPhoto = null;
-  let finalPhotoReady = 'not_ready';
-
-  if (photoReady === 'ready' && userHasUploadedPhoto && processedPhotoData) {
-    finalPhoto = processedPhotoData;
-    finalPhotoReady = 'ready';
+  // 3. Validasi Format NIP 18 Digit Numerik (/^[0-9]{18}$/)
+  if (!NIP_REGEX.test(nip)) {
+    showFormValidationAlert('Format NIP tidak valid! NIP wajib berupa angka numerik tepat 18 digit (tanpa spasi, huruf, atau tanda baca).');
+    document.getElementById('form-nip')?.focus();
+    return;
   }
 
-  const randomSuffix = Math.floor(1000 + Math.random() * 9000);
-  const newRegId = `KMN-2026-${randomSuffix}`;
+  // Validasi Format Nomor HP / WhatsApp Pegawai
+  if (!PHONE_REGEX.test(no_hp)) {
+    showFormValidationAlert('Nomor HP / WhatsApp tidak valid! Masukkan nomor aktif berupa angka (9 s.d. 16 digit, contoh: 081234567890).');
+    document.getElementById('form-phone')?.focus();
+    return;
+  }
 
-  const now = new Date();
-  const formattedTime = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')} ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+  // 4. Penanganan Pasfoto (Unggah Foto Mandiri vs Opsi Foto di Kantor)
+  let finalFoto = DEFAULT_TABLE_AVATAR;
+  let finalPhotoReady = 'not_ready';
 
-  const newRecord = {
-    id: newRegId,
-    name,
+  if (photoOption === 'ready') {
+    if (!userHasUploadedPhoto || !processedPhotoData) {
+      showFormValidationAlert('Anda memilih opsi "Unggah Foto Mandiri", namun belum memilih berkas foto (.jpg, .jpeg, atau .png maks 2 MB). Silakan unggah foto Anda terlebih dahulu atau pilih "Opsi Foto di Kantor".');
+      return;
+    }
+    finalFoto = processedPhotoData; // Base64 Data URL asli hasil pemotongan background
+    finalPhotoReady = 'ready';
+  } else {
+    // Opsi Foto di Kantor -> tetapkan avatar/siluet kosong default netral untuk tabel status antrean
+    finalFoto = DEFAULT_TABLE_AVATAR;
+    finalPhotoReady = 'not_ready';
+  }
+
+  // 5. Pembuatan Nomor Tiket Otomatis (KMN-2026-XXXX) & Tanggal (YYYY-MM-DD)
+  const tiket = generateTicketCode();
+  const newRecord = normalizeRecord({
+    tiket,
+    tanggal,
+    nama,
     nip,
-    bidang,
+    no_hp,
+    whatsapp: no_hp,
+    unitKerja,
     jabatan,
-    date,
+    foto: finalFoto,
     photoReady: finalPhotoReady,
-    photo: finalPhoto, // null if person did not upload photo
-    status: 'Menunggu Verifikasi',
-    createdAt: formattedTime
-  };
+    status: 'Menunggu Verifikasi'
+  });
 
   idCardRecords.unshift(newRecord);
   saveDataToStorage();
+  renderDashboardTable();
+  renderAdminTable();
 
-  // Kirim data ke backend Google Apps Script secara asynchronous
-  sendRecordToBackend(newRecord, 'create');
+  // Kirim ke Backend Google Apps Script (action: "create", menyertakan no_hp / whatsapp)
+  sendRecordToBackend(newRecord);
 
-  lastSubmittedId = newRegId;
-  document.getElementById('success-reg-id').textContent = newRegId;
+  lastSubmittedId = tiket;
+  document.getElementById('success-reg-id').textContent = tiket;
   document.getElementById('modal-success').classList.remove('hidden');
 
   resetIdCardForm();
+}
+
+function resetIdCardForm() {
+  const form = document.getElementById('id-card-form');
+  if (form) form.reset();
+
+  userHasUploadedPhoto = false;
+  rawUploadedPhotoData = DEFAULT_CARD_SAMPLE_PHOTO;
+  processedPhotoData = DEFAULT_CARD_SAMPLE_PHOTO;
+  photoScale = 100;
+  photoOffset = 0;
+
+  const scaleSlider = document.getElementById('photo-scale');
+  const offsetSlider = document.getElementById('photo-offset');
+  const scaleVal = document.getElementById('scale-val');
+  const offsetVal = document.getElementById('offset-val');
+  const bgRemovalToggle = document.getElementById('toggle-bg-removal');
+  const bgControls = document.getElementById('bg-remover-controls');
+
+  if (scaleSlider) scaleSlider.value = '100';
+  if (offsetSlider) offsetSlider.value = '0';
+  if (scaleVal) scaleVal.textContent = '100%';
+  if (offsetVal) offsetVal.textContent = '0px';
+  if (bgRemovalToggle) bgRemovalToggle.checked = true;
+  if (bgControls) bgControls.classList.remove('hidden');
+
+  const statusBadge = document.getElementById('photo-upload-status-badge');
+  if (statusBadge) {
+    statusBadge.textContent = 'Foto Sampel Default';
+    statusBadge.className = 'text-[10px] px-2.5 py-1 rounded-full bg-amber-100 text-amber-800 font-bold';
+  }
+
+  const dropFilename = document.getElementById('drop-zone-filename');
+  if (dropFilename) {
+    dropFilename.textContent = 'Klik atau Tarik Berkas Pasfoto ke Sini';
+  }
+
+  hideFormValidationAlert();
+  hidePhotoValidationError();
+  setDefaultDate();
+  togglePhotoUploadSection(true);
+  validateNipInput(document.getElementById('form-nip') || { value: '' });
+  validatePhoneInput(document.getElementById('form-phone') || { value: '' });
+  updateLivePreview();
 }
 
 function closeSuccessModal() {
@@ -914,48 +1366,30 @@ function closeSuccessModal() {
 function goToDashboardWithFilter() {
   closeSuccessModal();
   switchTab('dashboard');
-
   if (lastSubmittedId) {
-    document.getElementById('dashboard-search-input').value = lastSubmittedId;
-    renderDashboardTable();
+    const searchInput = document.getElementById('dashboard-search-input');
+    if (searchInput) {
+      searchInput.value = lastSubmittedId;
+      renderDashboardTable();
+    }
   }
 }
 
-function resetIdCardForm() {
-  document.getElementById('id-card-form').reset();
-  userHasUploadedPhoto = false;
-  processedPhotoData = 'assets/sample_pegawai_setengah_badan.png';
-  rawUploadedPhotoData = 'assets/sample_pegawai_setengah_badan.png';
-  photoScale = 100;
-  photoOffset = 0;
-  const scaleInput = document.getElementById('photo-scale');
-  if (scaleInput) scaleInput.value = 100;
-  const scaleVal = document.getElementById('scale-val');
-  if (scaleVal) scaleVal.textContent = '100%';
-  const offsetInput = document.getElementById('photo-offset');
-  if (offsetInput) offsetInput.value = 0;
-  const offsetVal = document.getElementById('offset-val');
-  if (offsetVal) offsetVal.textContent = '0px';
+// ============================================================================
+// 3.2 MODUL DASHBOARD STATUS & PELACAKAN (MODE PEGAWAI - READ ONLY)
+// PROTEKSI PRIVASI: Nomor HP / WhatsApp TIDAK DITAMPILKAN pada tabel publik ini
+// LOGIKA FOTO:
+// - Pegawai "Foto di Kantor": tampilkan avatar/siluet kosong default netral (assets/default-avatar.png)
+// - Pegawai "Unggah Foto Mandiri": tampilkan thumbnail foto asli yang diunggah & diproses
+// ============================================================================
 
-  setDefaultDate();
-  togglePhotoUploadSection(true);
-  updateLivePreview();
-}
-
-// -------------------------------------------------------------
-// DASHBOARD (AUDIENCE VIEW: READ-ONLY STATUS, NO DROPDOWN, NO ACTION COLUMN)
-// -------------------------------------------------------------
 function setDashboardFilter(filter) {
   currentFilter = filter;
-
   document.querySelectorAll('.dashboard-filter-btn').forEach(btn => {
-    if (btn.dataset.filter === filter) {
-      btn.className = 'dashboard-filter-btn px-3.5 py-1.5 rounded-xl text-xs font-bold transition whitespace-nowrap bg-emerald-700 text-white shadow-xs';
-    } else {
-      btn.className = 'dashboard-filter-btn px-3.5 py-1.5 rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-100 transition whitespace-nowrap';
-    }
+    btn.className = (btn.dataset.filter === filter)
+      ? 'dashboard-filter-btn px-3.5 py-1.5 rounded-xl text-xs font-bold transition whitespace-nowrap bg-emerald-700 text-white shadow-xs'
+      : 'dashboard-filter-btn px-3.5 py-1.5 rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-100 transition whitespace-nowrap';
   });
-
   renderDashboardTable();
 }
 
@@ -965,20 +1399,23 @@ function updateStats() {
   const printing = idCardRecords.filter(r => r.status === 'Sedang Dicetak').length;
   const completed = idCardRecords.filter(r => r.status === 'Selesai').length;
 
-  document.getElementById('stat-total').textContent = total;
-  document.getElementById('stat-pending').textContent = pending;
-  document.getElementById('stat-printing').textContent = printing;
-  document.getElementById('stat-completed').textContent = completed;
+  const setTxt = (id, val) => {
+    const el = document.getElementById(id);
+    if (el) el.textContent = val;
+  };
 
-  document.getElementById('filter-all-count').textContent = total;
-  document.getElementById('filter-pending-count').textContent = pending;
-  document.getElementById('filter-printing-count').textContent = printing;
-  document.getElementById('filter-completed-count').textContent = completed;
+  setTxt('stat-total', total);
+  setTxt('stat-pending', pending);
+  setTxt('stat-printing', printing);
+  setTxt('stat-completed', completed);
 
-  const navBadge = document.getElementById('nav-badge-count');
-  if (navBadge) navBadge.textContent = total;
-  const navBadgeMobile = document.getElementById('nav-badge-count-mobile');
-  if (navBadgeMobile) navBadgeMobile.textContent = total;
+  setTxt('filter-all-count', total);
+  setTxt('filter-pending-count', pending);
+  setTxt('filter-printing-count', printing);
+  setTxt('filter-completed-count', completed);
+
+  setTxt('nav-badge-count', total);
+  setTxt('nav-badge-count-mobile', total);
 }
 
 function renderDashboardTable() {
@@ -986,101 +1423,87 @@ function renderDashboardTable() {
   const emptyState = document.getElementById('table-empty-state');
   const searchTerm = (document.getElementById('dashboard-search-input')?.value || '').toLowerCase().trim();
 
-  let filtered = idCardRecords.filter(item => {
+  if (!tbody) return;
+
+  const filtered = idCardRecords.filter(item => {
     const matchesFilter = (currentFilter === 'all') || (item.status === currentFilter);
     const matchesSearch = !searchTerm ||
-      item.id.toLowerCase().includes(searchTerm) ||
-      item.name.toLowerCase().includes(searchTerm) ||
-      item.nip.toLowerCase().includes(searchTerm) ||
-      item.bidang.toLowerCase().includes(searchTerm) ||
-      item.jabatan.toLowerCase().includes(searchTerm);
+      (item.tiket || '').toLowerCase().includes(searchTerm) ||
+      (item.nip || '').toLowerCase().includes(searchTerm) ||
+      (item.nama || '').toLowerCase().includes(searchTerm) ||
+      (item.unitKerja || '').toLowerCase().includes(searchTerm) ||
+      (item.jabatan || '').toLowerCase().includes(searchTerm);
     return matchesFilter && matchesSearch;
   });
 
   tbody.innerHTML = '';
 
   if (filtered.length === 0) {
-    emptyState.classList.remove('hidden');
+    if (emptyState) emptyState.classList.remove('hidden');
     return;
-  } else {
-    emptyState.classList.add('hidden');
   }
+  if (emptyState) emptyState.classList.add('hidden');
 
   filtered.forEach(record => {
     const tr = document.createElement('tr');
     tr.className = 'hover:bg-slate-50 transition';
 
-    let statusBadgeClass = '';
-    let statusIcon = '';
+    let badgeClass = 'bg-amber-100 text-amber-800 border-amber-200';
+    let badgeIcon = '<i class="fa-solid fa-clock text-amber-600 mr-1.5"></i>';
     if (record.status === 'Selesai') {
-      statusBadgeClass = 'bg-emerald-100 text-emerald-800 border-emerald-200';
-      statusIcon = '<i class="fa-solid fa-circle-check text-emerald-600 mr-1.5"></i>';
+      badgeClass = 'bg-emerald-100 text-emerald-800 border-emerald-200';
+      badgeIcon = '<i class="fa-solid fa-circle-check text-emerald-600 mr-1.5"></i>';
     } else if (record.status === 'Sedang Dicetak') {
-      statusBadgeClass = 'bg-sky-100 text-sky-800 border-sky-200';
-      statusIcon = '<i class="fa-solid fa-spinner fa-spin text-sky-600 mr-1.5"></i>';
-    } else {
-      statusBadgeClass = 'bg-amber-100 text-amber-800 border-amber-200';
-      statusIcon = '<i class="fa-solid fa-clock text-amber-600 mr-1.5"></i>';
+      badgeClass = 'bg-sky-100 text-sky-800 border-sky-200';
+      badgeIcon = '<i class="fa-solid fa-spinner fa-spin text-sky-600 mr-1.5"></i>';
     }
 
-    const hasPhoto = Boolean(record.photo && record.photoReady === 'ready');
-    const photoMarkup = hasPhoto
-      ? `<img src="${record.photo}" alt="${record.name}" class="w-10 h-10 rounded-xl object-contain bg-slate-100 border border-slate-200 shadow-xs flex-shrink-0">`
-      : `<div class="w-10 h-10 rounded-xl bg-slate-100 border border-dashed border-slate-300 flex-shrink-0 flex flex-col items-center justify-center text-slate-400 shadow-2xs" title="Foto belum diunggah (pengambilan di Bagian Umum)">
-           <i class="fa-solid fa-user text-xs text-slate-400"></i>
-           <span class="text-[7.5px] font-bold text-slate-500 leading-none mt-0.5">No Foto</span>
-         </div>`;
+    const avatarSrc = getTableAvatarSrc(record);
 
+    // PRD 3.2: Nomor Tiket, Foto Profil kecil (40px x 40px, border-radius: 4px, object-fit: cover), Nama Pegawai, NIP, Unit Kerja, Jabatan, Lencana Status
+    // (Tanpa menampilkan Nomor HP/WhatsApp demi privasi pegawai)
     tr.innerHTML = `
-      <td class="py-4 px-4 sm:px-6 align-middle font-mono font-bold text-xs text-emerald-800 whitespace-nowrap">
-        <div class="flex items-center space-x-1.5">
-          <i class="fa-solid fa-ticket text-emerald-600"></i>
-          <span>${record.id}</span>
-        </div>
+      <td class="py-3.5 px-4 sm:px-5 align-middle font-mono font-bold text-xs text-emerald-800 whitespace-nowrap">
+        ${escapeHtml(record.tiket)}
       </td>
-
-      <td class="py-4 px-4 sm:px-6 align-middle">
+      <td class="py-3.5 px-4 sm:px-5 align-middle">
         <div class="flex items-center space-x-3">
-          ${photoMarkup}
+          <img src="${avatarSrc}" alt="${escapeHtml(record.nama)}" onerror="this.src='${DEFAULT_TABLE_AVATAR}'" class="avatar-table-thumb" style="width: 40px; height: 40px; border-radius: 4px; object-fit: cover;">
           <div>
-            <h4 class="font-bold text-slate-900 leading-tight">${record.name}</h4>
-            <div class="flex items-center space-x-2 mt-0.5">
-              <span class="text-xs text-slate-500 font-mono">NIP. ${record.nip}</span>
-              ${!hasPhoto ? '<span class="text-[9px] font-bold px-1.5 py-0.2 rounded bg-amber-50 text-amber-700 border border-amber-200 flex items-center space-x-1"><i class="fa-solid fa-camera text-[8px]"></i><span>Foto Bag. Umum</span></span>' : ''}
-            </div>
+            <h4 class="font-bold text-slate-900 leading-tight">${escapeHtml(record.nama)}</h4>
+            <span class="text-[11px] text-slate-400">${escapeHtml(record.tanggal)}</span>
           </div>
         </div>
       </td>
-
-      <td class="py-4 px-4 sm:px-6 align-middle">
-        <p class="font-bold text-emerald-900 text-xs">${record.bidang}</p>
-        <p class="text-xs text-slate-500 font-medium">${record.jabatan}</p>
+      <td class="py-3.5 px-4 sm:px-5 align-middle font-mono text-xs font-bold text-slate-700 whitespace-nowrap">
+        ${escapeHtml(record.nip)}
       </td>
-
-      <td class="py-4 px-4 sm:px-6 align-middle text-xs text-slate-500 whitespace-nowrap">
-        ${record.createdAt}
+      <td class="py-3.5 px-4 sm:px-5 align-middle text-xs font-semibold text-emerald-950">
+        ${escapeHtml(record.unitKerja)}
       </td>
-
-      <td class="py-4 px-4 sm:px-6 align-middle text-center whitespace-nowrap">
-        <span class="inline-flex items-center px-3 py-1.5 rounded-full text-xs font-bold border shadow-xs ${statusBadgeClass}">
-          ${statusIcon}
-          <span>${record.status}</span>
+      <td class="py-3.5 px-4 sm:px-5 align-middle text-xs text-slate-600">
+        ${escapeHtml(record.jabatan)}
+      </td>
+      <td class="py-3.5 px-4 sm:px-5 align-middle text-center whitespace-nowrap">
+        <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold border ${badgeClass}">
+          ${badgeIcon}
+          <span>${escapeHtml(record.status)}</span>
         </span>
       </td>
     `;
-
     tbody.appendChild(tr);
   });
 }
 
-// -------------------------------------------------------------
-// QUICK TRACK MODAL (AUDIENCE TRACKING)
-// -------------------------------------------------------------
+// Pelacakan Cepat (Cek Status NIP / Tiket)
 function openQuickTrackModal() {
   document.getElementById('modal-quick-track').classList.remove('hidden');
   document.getElementById('quick-track-result').classList.add('hidden');
-  document.getElementById('quick-track-input').value = '';
-  document.getElementById('quick-track-input').focus();
+  const inp = document.getElementById('quick-track-input');
+  if (inp) {
+    inp.value = '';
+    inp.focus();
+  }
 }
 
 function closeQuickTrackModal() {
@@ -1089,504 +1512,116 @@ function closeQuickTrackModal() {
 
 function handleQuickTrackSubmit(e) {
   e.preventDefault();
-  const search = document.getElementById('quick-track-input').value.trim().toUpperCase();
+  const query = (document.getElementById('quick-track-input')?.value || '').trim().toUpperCase();
   const resultContainer = document.getElementById('quick-track-result');
+  if (!resultContainer) return;
 
-  const match = idCardRecords.find(r => 
-    r.id.toUpperCase() === search || r.nip.replace(/\s+/g, '') === search.replace(/\s+/g, '')
+  const match = idCardRecords.find(r =>
+    (r.tiket || '').toUpperCase() === query ||
+    (r.nip || '').replace(/\s+/g, '') === query.replace(/\s+/g, '')
   );
 
   resultContainer.classList.remove('hidden');
 
   if (match) {
-    let statusColor = 'amber';
-    let progressStep = 1;
-    if (match.status === 'Sedang Dicetak') {
-      statusColor = 'sky';
-      progressStep = 2;
-    } else if (match.status === 'Selesai') {
-      statusColor = 'emerald';
-      progressStep = 3;
-    }
-
-    const hasPhoto = Boolean(match.photo && match.photoReady === 'ready');
-    const quickPhotoMarkup = hasPhoto
-      ? `<img src="${match.photo}" class="w-10 h-10 rounded-xl object-contain bg-white border border-slate-200">`
-      : `<div class="w-10 h-10 rounded-xl bg-slate-100 border border-dashed border-slate-300 flex-shrink-0 flex flex-col items-center justify-center text-slate-400" title="Foto belum diunggah">
-           <i class="fa-solid fa-user text-xs text-slate-400"></i>
-           <span class="text-[7.5px] font-bold text-slate-500 leading-none mt-0.5">No Foto</span>
-         </div>`;
-
+    const avatarSrc = getTableAvatarSrc(match);
     resultContainer.innerHTML = `
       <div class="p-4 rounded-2xl bg-slate-50 border border-slate-200 text-left space-y-3">
         <div class="flex items-center justify-between">
-          <span class="font-mono font-bold text-xs text-emerald-800">${match.id}</span>
-          <span class="px-2.5 py-0.5 rounded-full text-xs font-bold bg-${statusColor}-100 text-${statusColor}-800">
-            ${match.status}
-          </span>
+          <span class="font-mono font-bold text-xs text-emerald-800">${escapeHtml(match.tiket)}</span>
+          <span class="px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800">${escapeHtml(match.status)}</span>
         </div>
-
-        <div class="flex items-center space-x-3 pt-1">
-          ${quickPhotoMarkup}
+        <div class="flex items-center space-x-3">
+          <img src="${avatarSrc}" onerror="this.src='${DEFAULT_TABLE_AVATAR}'" class="avatar-table-thumb" style="width: 40px; height: 40px; border-radius: 4px; object-fit: cover;">
           <div>
-            <h5 class="text-sm font-bold text-slate-900">${match.name}</h5>
-            <div class="flex items-center space-x-2 mt-0.5">
-              <span class="text-xs text-slate-500 font-mono">NIP. ${match.nip}</span>
-              ${!hasPhoto ? '<span class="text-[9px] font-bold px-1.5 py-0.2 rounded bg-amber-50 text-amber-700 border border-amber-200">Foto Bag. Umum</span>' : ''}
-            </div>
+            <h5 class="text-sm font-bold text-slate-900">${escapeHtml(match.nama)}</h5>
+            <p class="text-xs text-slate-500 font-mono">NIP. ${escapeHtml(match.nip)}</p>
           </div>
         </div>
-
-        ${!hasPhoto ? `
-          <div class="p-2.5 rounded-xl bg-amber-50 border border-amber-200 text-amber-800 text-[11px] flex items-center space-x-2">
-            <i class="fa-solid fa-camera text-amber-600 flex-shrink-0 text-sm"></i>
-            <span>Pegawai belum mengunggah foto. Pengambilan foto dijadwalkan di Bagian Umum Kanwil Kemenag.</span>
-          </div>
-        ` : ''}
-
         <div class="text-xs text-slate-600 bg-white p-2.5 rounded-xl border border-slate-200">
-          <p><span class="font-bold">Unit Kerja:</span> ${match.bidang}</p>
-          <p><span class="font-bold">Jabatan:</span> ${match.jabatan}</p>
-        </div>
-
-        <!-- Progress Steps -->
-        <div class="pt-2 border-t border-slate-200">
-          <p class="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">Status Pengerjaan:</p>
-          <div class="grid grid-cols-3 gap-1.5 text-center text-[10px]">
-            <div class="p-1.5 rounded-lg ${progressStep >= 1 ? 'bg-emerald-700 text-white font-bold' : 'bg-slate-200 text-slate-500'}">
-              1. Verifikasi
-            </div>
-            <div class="p-1.5 rounded-lg ${progressStep >= 2 ? 'bg-sky-600 text-white font-bold' : 'bg-slate-200 text-slate-500'}">
-              2. Dicetak
-            </div>
-            <div class="p-1.5 rounded-lg ${progressStep >= 3 ? 'bg-emerald-600 text-white font-bold' : 'bg-slate-200 text-slate-500'}">
-              3. Selesai
-            </div>
-          </div>
+          <p><span class="font-bold">Unit Kerja:</span> ${escapeHtml(match.unitKerja)}</p>
+          <p><span class="font-bold">Jabatan:</span> ${escapeHtml(match.jabatan)}</p>
         </div>
       </div>
     `;
   } else {
     resultContainer.innerHTML = `
       <div class="p-4 rounded-2xl bg-rose-50 border border-rose-200 text-rose-800 text-xs text-center">
-        <i class="fa-solid fa-circle-exclamation text-rose-600 text-xl mb-1"></i>
-        <p class="font-bold">NIP atau Nomor Registrasi Tidak Ditemukan</p>
-        <p class="mt-1">Pastikan NIP atau kode tiket tepat (contoh: KMN-2026-1001 atau 198804122014021003).</p>
+        <i class="fa-solid fa-circle-exclamation text-rose-600 text-lg mb-1"></i>
+        <p class="font-bold">Data Tidak Ditemukan</p>
+        <p class="mt-0.5">Periksa kembali 18 digit NIP atau Nomor Tiket Anda.</p>
       </div>
     `;
   }
 }
 
-// -------------------------------------------------------------
-// TOAST NOTIFICATION
-// -------------------------------------------------------------
-function showToast(message) {
-  const existing = document.getElementById('app-toast');
-  if (existing) existing.remove();
+// ============================================================================
+// 3.5 MODUL AUTENTIKASI & MANAJEMEN AKUN ADMIN (TANPA HARDCODE PASSWORD)
+// ============================================================================
 
-  const toast = document.createElement('div');
-  toast.id = 'app-toast';
-  toast.className = 'fixed bottom-5 right-5 z-50 bg-slate-900 text-white px-4 py-3 rounded-2xl shadow-2xl flex items-center space-x-3 text-xs sm:text-sm font-semibold border border-slate-700';
-  toast.innerHTML = `
-    <i class="fa-solid fa-circle-check text-emerald-400 text-base"></i>
-    <span>${message}</span>
-  `;
-  document.body.appendChild(toast);
-
-  setTimeout(() => {
-    toast.style.opacity = '0';
-    toast.style.transition = 'opacity 0.5s ease';
-    setTimeout(() => toast.remove(), 500);
-  }, 3500);
-}
-
-// =============================================================
-// INPUT VALIDATIONS (REAL-TIME FEEDBACK)
-// =============================================================
-
-/**
- * Enforce strictly numeric keystrokes for NIP input
- */
-function isNumberKey(event) {
-  const charCode = (event.which) ? event.which : event.keyCode;
-  // Allow navigation keys: backspace (8), tab (9), enter (13), etc.
-  if (charCode > 31 && (charCode < 48 || charCode > 57)) {
-    event.preventDefault();
-    return false;
-  }
-  return true;
-}
-
-/**
- * Validate NIP input in real-time, enforce 18-digit constraint and update badge
- */
-function validateNipInput(input) {
-  // Strip any accidental non-digit characters (e.g. from copy-paste)
-  const original = input.value;
-  const digits = original.replace(/\D/g, '');
-  if (original !== digits) {
-    input.value = digits;
-  }
-
-  const badge = document.getElementById('nip-validation-badge');
-  const feedback = document.getElementById('nip-validation-feedback');
-  const iconStatus = document.getElementById('nip-icon-status');
-
-  if (badge) {
-    badge.textContent = `${digits.length}/18 Digit`;
-    if (digits.length === 18) {
-      badge.className = 'text-[10px] font-bold px-2 py-0.5 rounded-md bg-emerald-100 text-emerald-800 font-mono';
-    } else {
-      badge.className = 'text-[10px] font-bold px-2 py-0.5 rounded-md bg-slate-100 text-slate-600 font-mono';
-    }
-  }
-
-  if (feedback && iconStatus) {
-    if (digits.length === 18) {
-      feedback.textContent = 'Format NIP valid dan lengkap (18 digit angka).';
-      feedback.className = 'text-[11px] font-semibold mt-1 text-emerald-600';
-      iconStatus.innerHTML = '<i class="fa-solid fa-circle-check text-emerald-600"></i>';
-    } else if (digits.length > 0) {
-      feedback.textContent = `NIP PNS terdiri dari 18 digit angka (${18 - digits.length} digit lagi).`;
-      feedback.className = 'text-[11px] font-semibold mt-1 text-amber-600';
-      iconStatus.innerHTML = '<i class="fa-solid fa-circle-info text-amber-500"></i>';
-    } else {
-      feedback.textContent = 'Format resmi NIP PNS 18 digit angka tanpa huruf atau spasi.';
-      feedback.className = 'text-[11px] font-semibold mt-1 text-slate-400';
-      iconStatus.innerHTML = '<i class="fa-solid fa-hashtag text-slate-400"></i>';
-    }
-  }
-
-  updateLivePreview();
-}
-
-/**
- * Validate employee name in real-time
- */
-function validateNameInput(input) {
-  const badge = document.getElementById('name-validation-badge');
-  const val = input.value.trim();
-  if (badge) {
-    if (val.length >= 3) {
-      badge.textContent = 'Nama valid';
-      badge.className = 'text-[10px] font-bold text-emerald-600';
-    } else {
-      badge.textContent = 'Gelar depan/belakang diperbolehkan';
-      badge.className = 'text-[10px] font-bold text-slate-400';
-    }
-  }
-  updateLivePreview();
-}
-
-
-// =============================================================
-// DYNAMIC UNIT KERJA / BIDANG MANAGEMENT
-// =============================================================
-
-function loadUnits() {
-  const saved = localStorage.getItem(UNITS_STORAGE_KEY);
-  if (saved) {
-    try {
-      kemenagUnits = JSON.parse(saved);
-      if (!Array.isArray(kemenagUnits) || kemenagUnits.length === 0) {
-        kemenagUnits = [...DEFAULT_KEMENAG_UNITS];
-      }
-    } catch (e) {
-      kemenagUnits = [...DEFAULT_KEMENAG_UNITS];
-    }
-  } else {
-    kemenagUnits = [...DEFAULT_KEMENAG_UNITS];
-    saveUnits();
+function getAdminSession() {
+  try {
+    const raw = sessionStorage.getItem(ADMIN_SESSION_KEY);
+    if (!raw) return null;
+    return JSON.parse(raw);
+  } catch (e) {
+    return null;
   }
 }
-
-function saveUnits() {
-  localStorage.setItem(UNITS_STORAGE_KEY, JSON.stringify(kemenagUnits));
-  populateUnitDropdowns();
-  renderAdminUnitsList();
-}
-
-function populateUnitDropdowns() {
-  // Update #form-bidang (Registration form)
-  const formBidang = document.getElementById('form-bidang');
-  if (formBidang) {
-    const currentVal = formBidang.value;
-    formBidang.innerHTML = kemenagUnits.map(unit => `<option value="${unit}">${unit}</option>`).join('');
-    if (kemenagUnits.includes(currentVal)) {
-      formBidang.value = currentVal;
-    }
-  }
-
-  // Update #admin-filter-unit (Admin table filter)
-  const adminFilterUnit = document.getElementById('admin-filter-unit');
-  if (adminFilterUnit) {
-    const currentVal = adminFilterUnit.value;
-    adminFilterUnit.innerHTML = '<option value="all">Semua Unit Kerja</option>' +
-      kemenagUnits.map(unit => `<option value="${unit}">${unit}</option>`).join('');
-    if (currentVal && (currentVal === 'all' || kemenagUnits.includes(currentVal))) {
-      adminFilterUnit.value = currentVal;
-    }
-  }
-
-  // Update #admin-edit-bidang (Admin edit modal)
-  const adminEditBidang = document.getElementById('admin-edit-bidang');
-  if (adminEditBidang) {
-    adminEditBidang.innerHTML = kemenagUnits.map(unit => `<option value="${unit}">${unit}</option>`).join('');
-  }
-
-  // Update #admin-add-bidang (Admin add modal)
-  const adminAddBidang = document.getElementById('admin-add-bidang');
-  if (adminAddBidang) {
-    adminAddBidang.innerHTML = kemenagUnits.map(unit => `<option value="${unit}">${unit}</option>`).join('');
-  }
-}
-
-function renderAdminUnitsList() {
-  const listContainer = document.getElementById('admin-units-list');
-  const countPill = document.getElementById('admin-total-units-pill');
-  const badgeCount = document.getElementById('admin-badge-units-count');
-
-  if (countPill) countPill.textContent = `${kemenagUnits.length} Unit`;
-  if (badgeCount) badgeCount.textContent = kemenagUnits.length;
-
-  if (!listContainer) return;
-
-  listContainer.innerHTML = '';
-  kemenagUnits.forEach((unit, index) => {
-    const item = document.createElement('div');
-    item.className = 'py-3 px-3 flex items-center justify-between hover:bg-slate-50 rounded-xl transition border-b border-slate-100 last:border-b-0';
-    item.innerHTML = `
-      <div class="flex items-center space-x-3">
-        <span class="w-7 h-7 rounded-lg bg-emerald-50 text-emerald-800 text-xs font-bold font-mono flex items-center justify-center border border-emerald-200">
-          ${index + 1}
-        </span>
-        <span class="text-xs sm:text-sm font-bold text-slate-800">${unit}</span>
-      </div>
-      <div class="flex items-center space-x-1">
-        <button type="button" onclick="openEditUnitModal(${index})" class="p-2 rounded-lg text-slate-400 hover:text-amber-700 hover:bg-amber-50 text-xs transition" title="Ubah Nama Unit">
-          <i class="fa-solid fa-pen-to-square"></i>
-        </button>
-        <button type="button" onclick="deleteUnit(${index})" class="p-2 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 text-xs transition" title="Hapus Unit">
-          <i class="fa-solid fa-trash-can"></i>
-        </button>
-      </div>
-    `;
-    listContainer.appendChild(item);
-  });
-}
-
-function handleAdminAddUnit(e) {
-  e.preventDefault();
-  const input = document.getElementById('admin-new-unit-input');
-  const newName = (input?.value || '').trim();
-  if (!newName) return;
-
-  if (kemenagUnits.includes(newName)) {
-    alert('Unit kerja ini sudah ada di daftar.');
-    return;
-  }
-
-  kemenagUnits.push(newName);
-  saveUnits();
-  if (input) input.value = '';
-  showToast(`Unit kerja "${newName}" berhasil ditambahkan ke dropdown!`);
-}
-
-function openEditUnitModal(index) {
-  const modal = document.getElementById('modal-unit-edit');
-  const input = document.getElementById('unit-edit-name-input');
-  const indexField = document.getElementById('unit-edit-index');
-
-  if (kemenagUnits[index]) {
-    indexField.value = index;
-    input.value = kemenagUnits[index];
-    modal.classList.remove('hidden');
-    input.focus();
-  }
-}
-
-function closeEditUnitModal() {
-  document.getElementById('modal-unit-edit').classList.add('hidden');
-}
-
-function handleSaveEditedUnit(e) {
-  e.preventDefault();
-  const index = parseInt(document.getElementById('unit-edit-index').value, 10);
-  const newName = document.getElementById('unit-edit-name-input').value.trim();
-
-  if (!newName || isNaN(index) || !kemenagUnits[index]) return;
-
-  const oldName = kemenagUnits[index];
-  kemenagUnits[index] = newName;
-
-  // Also update all existing records that were using the old name
-  idCardRecords.forEach(r => {
-    if (r.bidang === oldName) {
-      r.bidang = newName;
-    }
-  });
-  saveDataToStorage();
-  saveUnits();
-  renderAdminTable();
-  renderDashboardTable();
-
-  closeEditUnitModal();
-  showToast(`Unit kerja "${oldName}" diperbarui menjadi "${newName}"!`);
-}
-
-function deleteUnit(index) {
-  if (kemenagUnits.length <= 1) {
-    alert('Minimal harus ada 1 unit kerja tersisa.');
-    return;
-  }
-
-  const targetName = kemenagUnits[index];
-  if (!confirm(`Hapus unit kerja "${targetName}" dari pilihan dropdown?`)) return;
-
-  kemenagUnits.splice(index, 1);
-  saveUnits();
-  showToast(`Unit kerja "${targetName}" berhasil dihapus.`);
-}
-
-function handleResetUnitsToDefault() {
-  if (!confirm('Apakah Anda yakin ingin mereset daftar unit kerja kembali ke 14 unit standar Kanwil Kemenag Kalsel?')) return;
-  kemenagUnits = [...DEFAULT_KEMENAG_UNITS];
-  saveUnits();
-  showToast('Daftar unit kerja berhasil direset ke standar Kemenag!');
-}
-
-
-// =============================================================
-// CARD BACK TEMPLATE SETTINGS (KEPALA KANWIL, NIP, & ALAMAT)
-// =============================================================
-
-function loadBackSettings() {
-  const saved = localStorage.getItem(BACK_SETTINGS_KEY);
-  if (saved) {
-    try {
-      cardBackSettings = Object.assign({}, DEFAULT_BACK_SETTINGS, JSON.parse(saved));
-    } catch (e) {
-      cardBackSettings = { ...DEFAULT_BACK_SETTINGS };
-    }
-  } else {
-    cardBackSettings = { ...DEFAULT_BACK_SETTINGS };
-    saveBackSettings();
-  }
-  applyBackSettings();
-}
-
-function saveBackSettings() {
-  localStorage.setItem(BACK_SETTINGS_KEY, JSON.stringify(cardBackSettings));
-  applyBackSettings();
-}
-
-function applyBackSettings() {
-  // Update inputs in Sub-Tab 3 settings form
-  const nameInput = document.getElementById('setting-kepala-name');
-  const nipInput = document.getElementById('setting-kepala-nip');
-  const titleInput = document.getElementById('setting-kepala-title');
-  const alamat1Input = document.getElementById('setting-alamat-1');
-  const alamat2Input = document.getElementById('setting-alamat-2');
-
-  if (nameInput) nameInput.value = cardBackSettings.kepalaName;
-  if (nipInput) nipInput.value = cardBackSettings.kepalaNip;
-  if (titleInput) titleInput.value = cardBackSettings.kepalaTitle;
-  if (alamat1Input) alamat1Input.value = cardBackSettings.alamat1;
-  if (alamat2Input) alamat2Input.value = cardBackSettings.alamat2;
-
-  // Update live preview card back (tab-formulir)
-  const backAlamat1 = document.getElementById('back-preview-alamat1');
-  const backAlamat2 = document.getElementById('back-preview-alamat2');
-  const backKepalaTitle = document.getElementById('back-preview-kepala-title');
-  const backKepalaName = document.getElementById('back-preview-kepala-name');
-  const backKepalaNip = document.getElementById('back-preview-kepala-nip');
-
-  if (backAlamat1) backAlamat1.textContent = cardBackSettings.alamat1;
-  if (backAlamat2) backAlamat2.textContent = cardBackSettings.alamat2;
-  if (backKepalaTitle) backKepalaTitle.textContent = cardBackSettings.kepalaTitle;
-  if (backKepalaName) backKepalaName.textContent = cardBackSettings.kepalaName;
-  if (backKepalaNip) backKepalaNip.textContent = `NIP. ${cardBackSettings.kepalaNip}`;
-
-  // Update admin template mini preview (sub-tab 3)
-  const adminAlamat1 = document.getElementById('admin-preview-alamat1');
-  const adminAlamat2 = document.getElementById('admin-preview-alamat2');
-  const adminKepalaTitle = document.getElementById('admin-preview-kepala-title');
-  const adminKepalaName = document.getElementById('admin-preview-kepala-name');
-  const adminKepalaNip = document.getElementById('admin-preview-kepala-nip');
-
-  if (adminAlamat1) adminAlamat1.textContent = cardBackSettings.alamat1;
-  if (adminAlamat2) adminAlamat2.textContent = cardBackSettings.alamat2;
-  if (adminKepalaTitle) adminKepalaTitle.textContent = cardBackSettings.kepalaTitle;
-  if (adminKepalaName) adminKepalaName.textContent = cardBackSettings.kepalaName;
-  if (adminKepalaNip) adminKepalaNip.textContent = `NIP. ${cardBackSettings.kepalaNip}`;
-}
-
-function previewBackSettingsLive() {
-  const name = document.getElementById('setting-kepala-name')?.value.trim() || cardBackSettings.kepalaName;
-  const nip = document.getElementById('setting-kepala-nip')?.value.trim() || cardBackSettings.kepalaNip;
-  const title = document.getElementById('setting-kepala-title')?.value.trim() || cardBackSettings.kepalaTitle;
-  const alamat1 = document.getElementById('setting-alamat-1')?.value.trim() || cardBackSettings.alamat1;
-  const alamat2 = document.getElementById('setting-alamat-2')?.value.trim() || cardBackSettings.alamat2;
-
-  const adminAlamat1 = document.getElementById('admin-preview-alamat1');
-  const adminAlamat2 = document.getElementById('admin-preview-alamat2');
-  const adminKepalaTitle = document.getElementById('admin-preview-kepala-title');
-  const adminKepalaName = document.getElementById('admin-preview-kepala-name');
-  const adminKepalaNip = document.getElementById('admin-preview-kepala-nip');
-
-  if (adminAlamat1) adminAlamat1.textContent = alamat1;
-  if (adminAlamat2) adminAlamat2.textContent = alamat2;
-  if (adminKepalaTitle) adminKepalaTitle.textContent = title;
-  if (adminKepalaName) adminKepalaName.textContent = name;
-  if (adminKepalaNip) adminKepalaNip.textContent = `NIP. ${nip}`;
-}
-
-function handleSaveBackSettings(e) {
-  e.preventDefault();
-  cardBackSettings.kepalaName = document.getElementById('setting-kepala-name').value.trim();
-  cardBackSettings.kepalaNip = document.getElementById('setting-kepala-nip').value.trim();
-  cardBackSettings.kepalaTitle = document.getElementById('setting-kepala-title').value.trim();
-  cardBackSettings.alamat1 = document.getElementById('setting-alamat-1').value.trim();
-  cardBackSettings.alamat2 = document.getElementById('setting-alamat-2').value.trim();
-
-  saveBackSettings();
-  showToast('Pengaturan informasi tampak belakang kartu berhasil disimpan!');
-}
-
-function handleResetBackSettingsToDefault() {
-  if (!confirm('Kembalikan data Kepala Kanwil, NIP, dan alamat kantor ke standar resmi?')) return;
-  cardBackSettings = { ...DEFAULT_BACK_SETTINGS };
-  saveBackSettings();
-  showToast('Data tampak belakang direset ke standar resmi Kemenag!');
-}
-
-
-// =============================================================
-// ADMIN AUTHENTICATION & UI
-// =============================================================
 
 function isAdminLoggedIn() {
-  return sessionStorage.getItem(ADMIN_AUTH_KEY) === 'true';
+  const sess = getAdminSession();
+  return Boolean(sess && sess.loggedIn && sess.username);
+}
+
+function isSuperadmin() {
+  const sess = getAdminSession();
+  return Boolean(sess && sess.role === 'Superadmin');
+}
+
+async function computeSha256Hex(text) {
+  if (!window.crypto || !window.crypto.subtle) return '';
+  const encoder = new TextEncoder();
+  const data = encoder.encode(text);
+  const hashBuffer = await window.crypto.subtle.digest('SHA-256', data);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
 }
 
 function updateAdminUI() {
-  const loggedIn = isAdminLoggedIn();
-  const navBtnAdmin = document.getElementById('nav-btn-admin');
+  const sess = getAdminSession();
+  const loggedIn = Boolean(sess && sess.loggedIn);
+
   const btnLogout = document.getElementById('btn-admin-logout');
   const navAdminText = document.getElementById('btn-admin-nav-text');
-  const mobileNavBtnAdmin = document.getElementById('mobile-nav-btn-admin');
   const mobileBtnAdminText = document.getElementById('mobile-btn-admin-text');
 
   if (loggedIn) {
-    if (navBtnAdmin) navBtnAdmin.classList.remove('hidden');
     if (btnLogout) btnLogout.classList.remove('hidden');
-    if (mobileNavBtnAdmin) mobileNavBtnAdmin.classList.remove('hidden');
-    if (navAdminText) navAdminText.textContent = 'Masuk Panel Admin';
-    if (mobileBtnAdminText) mobileBtnAdminText.textContent = 'Masuk Panel Admin';
+    if (navAdminText) navAdminText.textContent = 'Panel Admin';
+    if (mobileBtnAdminText) mobileBtnAdminText.textContent = 'Panel Admin';
+
+    const roleBadge = document.getElementById('admin-header-role-badge');
+    const officerName = document.getElementById('admin-header-officer-name');
+    const bannerRole = document.getElementById('admin-banner-role');
+    const bannerUser = document.getElementById('admin-banner-username');
+
+    if (roleBadge) roleBadge.textContent = (sess.role || 'Operator').toUpperCase();
+    if (officerName) officerName.textContent = sess.nama_petugas || sess.username;
+    if (bannerRole) bannerRole.textContent = sess.role || 'Operator';
+    if (bannerUser) bannerUser.textContent = `@${sess.username}`;
+
+    // Batasi form Tambah Admin hanya untuk Superadmin
+    const addBox = document.getElementById('superadmin-add-account-box');
+    if (addBox) {
+      if (sess.role === 'Superadmin') {
+        addBox.classList.remove('opacity-50', 'pointer-events-none');
+      } else {
+        addBox.classList.add('opacity-50', 'pointer-events-none');
+      }
+    }
   } else {
-    if (navBtnAdmin) navBtnAdmin.classList.add('hidden');
     if (btnLogout) btnLogout.classList.add('hidden');
-    if (mobileNavBtnAdmin) mobileNavBtnAdmin.classList.add('hidden');
     if (navAdminText) navAdminText.textContent = 'Login Admin';
     if (mobileBtnAdminText) mobileBtnAdminText.textContent = 'Login Admin';
 
@@ -1616,109 +1651,403 @@ function openAdminLoginModal() {
   const passwordInput = document.getElementById('admin-login-password');
 
   if (errorBox) errorBox.classList.add('hidden');
+  if (usernameInput) usernameInput.value = '';
   if (passwordInput) passwordInput.value = '';
-  if (usernameInput) usernameInput.value = 'admin';
-  modal.classList.remove('hidden');
-  if (passwordInput) passwordInput.focus();
+  if (modal) modal.classList.remove('hidden');
+  if (usernameInput) usernameInput.focus();
 }
 
 function closeAdminLoginModal() {
-  document.getElementById('modal-admin-login').classList.add('hidden');
+  document.getElementById('modal-admin-login')?.classList.add('hidden');
 }
 
-function handleAdminLoginSubmit(e) {
+/**
+ * 3.5.1 Keamanan Login:
+ * Mengirim permintaan verifikasi ke backend Google Apps Script (`action: "login"`).
+ * Jika valid, simpan status sesi beserta informasi `role` di `sessionStorage`.
+ */
+async function handleAdminLoginSubmit(e) {
   e.preventDefault();
-  const u = document.getElementById('admin-login-username').value.trim();
-  const p = document.getElementById('admin-login-password').value.trim();
+  const username = (document.getElementById('admin-login-username')?.value || '').trim();
+  const password = (document.getElementById('admin-login-password')?.value || '').trim();
   const errorBox = document.getElementById('admin-login-error');
   const errorText = document.getElementById('admin-login-error-text');
+  const submitBtn = document.getElementById('btn-submit-admin-login');
+  const submitBtnText = document.getElementById('btn-submit-admin-login-text');
 
-  if (u === 'admin' && p === 'admin') {
-    sessionStorage.setItem(ADMIN_AUTH_KEY, 'true');
-    closeAdminLoginModal();
-    updateAdminUI();
-    switchTab('admin');
-    showToast('Berhasil login sebagai Administrator!');
-  } else {
-    if (errorBox) {
-      errorText.textContent = 'Username atau password salah! Gunakan default: admin / admin';
+  if (!username || !password) return;
+  if (errorBox) errorBox.classList.add('hidden');
+  if (submitBtn) submitBtn.disabled = true;
+  if (submitBtnText) submitBtnText.textContent = 'Memverifikasi...';
+
+  try {
+    // 1. Kirim permintaan verifikasi ke backend Google Apps Script (action: "login")
+    const res = await postToAppsScript({
+      action: 'login',
+      username: username,
+      password: password
+    });
+
+    if (res && res.status === 'success' && res.user) {
+      const sessionData = {
+        loggedIn: true,
+        id_admin: res.user.id_admin || 'ADM-01',
+        username: res.user.username,
+        nama_petugas: res.user.nama_petugas || res.user.username,
+        role: res.user.role || 'Superadmin',
+        loginTime: new Date().toISOString()
+      };
+      sessionStorage.setItem(ADMIN_SESSION_KEY, JSON.stringify(sessionData));
+
+      if (Array.isArray(res.admins)) {
+        adminAccountsList = res.admins;
+        saveAdminAccountsCache();
+      }
+
+      closeAdminLoginModal();
+      updateAdminUI();
+      switchTab('admin');
+      showToast(`Selamat datang, ${sessionData.nama_petugas} (${sessionData.role})!`);
+      return;
+    }
+
+    // Jika backend lama belum memiliki action "login", lakukan verifikasi digest SHA-256 lokal
+    if (res && res.message && res.message.includes('tidak dikenali')) {
+      const verifiedLocal = await verifyOfflineDigestLogin(username, password);
+      if (verifiedLocal) {
+        sessionStorage.setItem(ADMIN_SESSION_KEY, JSON.stringify(verifiedLocal));
+        closeAdminLoginModal();
+        updateAdminUI();
+        switchTab('admin');
+        showToast(`Login berhasil sebagai ${verifiedLocal.nama_petugas} (${verifiedLocal.role}).`);
+        return;
+      }
+    }
+
+    if (errorBox && errorText) {
+      errorText.textContent = (res && res.message) ? res.message : 'Username atau kata sandi tidak valid!';
       errorBox.classList.remove('hidden');
     }
+  } catch (err) {
+    // Fallback verifikasi digest jika tidak ada koneksi internet saat pengujian lokal
+    const verifiedLocal = await verifyOfflineDigestLogin(username, password);
+    if (verifiedLocal) {
+      sessionStorage.setItem(ADMIN_SESSION_KEY, JSON.stringify(verifiedLocal));
+      closeAdminLoginModal();
+      updateAdminUI();
+      switchTab('admin');
+      showToast(`Login berhasil (Mode Lokal) sebagai ${verifiedLocal.nama_petugas}.`);
+      return;
+    }
+
+    if (errorBox && errorText) {
+      errorText.textContent = 'Username atau kata sandi salah!';
+      errorBox.classList.remove('hidden');
+    }
+  } finally {
+    if (submitBtn) submitBtn.disabled = false;
+    if (submitBtnText) submitBtnText.textContent = 'Masuk Admin';
   }
 }
 
+async function verifyOfflineDigestLogin(username, password) {
+  const inputDigest = await computeSha256Hex(`${username.toLowerCase()}:${password}`);
+  const match = adminAccountsList.find(a =>
+    a.username.toLowerCase() === username.toLowerCase() &&
+    a.status_aktif === 'Aktif' &&
+    a.pwd_FrontDigest === inputDigest
+  );
+  if (!match) return null;
+  return {
+    loggedIn: true,
+    id_admin: match.id_admin,
+    username: match.username,
+    nama_petugas: match.nama_petugas,
+    role: match.role,
+    loginTime: new Date().toISOString()
+  };
+}
+
 function handleAdminLogout() {
-  if (!confirm('Apakah Anda ingin keluar dari Panel Admin?')) return;
-  sessionStorage.removeItem(ADMIN_AUTH_KEY);
+  if (!confirm('Apakah Anda yakin ingin keluar dari Mode Admin?')) return;
+  sessionStorage.removeItem(ADMIN_SESSION_KEY);
   updateAdminUI();
   switchTab('dashboard');
-  showToast('Anda telah logout dari Panel Admin.');
+  showToast('Sesi Admin telah berakhir.');
 }
+
+function loadAdminAccountsCache() {
+  const saved = localStorage.getItem(ADMIN_ACCOUNTS_CACHE_KEY);
+  if (saved) {
+    try {
+      const parsed = JSON.parse(saved);
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        adminAccountsList = parsed;
+      }
+    } catch (e) {}
+  }
+}
+
+function saveAdminAccountsCache() {
+  localStorage.setItem(ADMIN_ACCOUNTS_CACHE_KEY, JSON.stringify(adminAccountsList));
+}
+
+async function fetchAdminAccountsFromBackend() {
+  try {
+    const res = await postToAppsScript({
+      action: 'manage_admin',
+      sub_action: 'list'
+    });
+    if (res && res.status === 'success' && Array.isArray(res.admins)) {
+      adminAccountsList = res.admins;
+      saveAdminAccountsCache();
+      renderAdminAccountsTable();
+      showToast('Daftar petugas admin berhasil diperbarui dari Google Sheets.');
+    } else {
+      renderAdminAccountsTable();
+    }
+  } catch (e) {
+    renderAdminAccountsTable();
+  }
+}
+
+function renderAdminAccountsTable() {
+  const tbody = document.getElementById('admin-accounts-table-body');
+  if (!tbody) return;
+  tbody.innerHTML = '';
+
+  const superadminActive = isSuperadmin();
+
+  adminAccountsList.forEach(acc => {
+    const tr = document.createElement('tr');
+    tr.className = 'hover:bg-slate-50 transition';
+
+    const isAktif = (acc.status_aktif || 'Aktif') === 'Aktif';
+    const statusPill = isAktif
+      ? '<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800">Aktif</span>'
+      : '<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-100 text-rose-800">Nonaktif</span>';
+
+    const rolePill = acc.role === 'Superadmin'
+      ? '<span class="px-2 py-0.5 rounded text-[10px] font-extrabold bg-amber-100 text-amber-800">Superadmin</span>'
+      : '<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-100 text-slate-700">Operator</span>';
+
+    tr.innerHTML = `
+      <td class="py-3 px-3 font-mono font-bold text-slate-700">${escapeHtml(acc.id_admin)}</td>
+      <td class="py-3 px-3">
+        <p class="font-bold text-slate-900">${escapeHtml(acc.nama_petugas)}</p>
+        <p class="font-mono text-[11px] text-slate-500">@${escapeHtml(acc.username)}</p>
+      </td>
+      <td class="py-3 px-3">${rolePill}</td>
+      <td class="py-3 px-3 text-center">${statusPill}</td>
+      <td class="py-3 px-3 text-center">
+        ${superadminActive ? `
+          <div class="flex items-center justify-center space-x-1">
+            <button type="button" onclick="handleToggleAdminAccountStatus('${escapeHtml(acc.id_admin)}', '${escapeHtml(acc.username)}')" class="px-2 py-1 rounded-lg border border-slate-200 hover:bg-slate-100 text-[10px] font-bold text-slate-700" title="Aktifkan / Nonaktifkan">
+              ${isAktif ? 'Nonaktifkan' : 'Aktifkan'}
+            </button>
+            <button type="button" onclick="handleDeleteAdminAccount('${escapeHtml(acc.id_admin)}', '${escapeHtml(acc.username)}')" class="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50" title="Hapus Akun">
+              <i class="fa-solid fa-trash-can"></i>
+            </button>
+          </div>
+        ` : '<span class="text-[10px] text-slate-400 italic">Khusus Superadmin</span>'}
+      </td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+async function handleAdminChangePassword(e) {
+  e.preventDefault();
+  const sess = getAdminSession();
+  if (!sess) return;
+
+  const oldPassword = (document.getElementById('admin-change-old-pass')?.value || '').trim();
+  const newPassword = (document.getElementById('admin-change-new-pass')?.value || '').trim();
+
+  if (newPassword.length < 6) {
+    alert('Password baru minimal harus terdiri dari 6 karakter.');
+    return;
+  }
+
+  try {
+    const res = await postToAppsScript({
+      action: 'manage_admin',
+      sub_action: 'change_password',
+      username: sess.username,
+      old_password: oldPassword,
+      new_password: newPassword
+    });
+
+    if (res && res.status === 'error' && !res.message?.includes('tidak dikenali')) {
+      alert(res.message);
+      return;
+    }
+  } catch (err) {}
+
+  // Perbarui digest lokal juga
+  const target = adminAccountsList.find(a => a.username.toLowerCase() === sess.username.toLowerCase());
+  if (target) {
+    target.pwd_FrontDigest = await computeSha256Hex(`${sess.username.toLowerCase()}:${newPassword}`);
+    saveAdminAccountsCache();
+  }
+
+  document.getElementById('admin-change-old-pass').value = '';
+  document.getElementById('admin-change-new-pass').value = '';
+  showToast('Password akun Anda berhasil diperbarui!');
+}
+
+async function handleSuperadminAddAccount(e) {
+  e.preventDefault();
+  if (!isSuperadmin()) {
+    alert('Hanya Superadmin yang dapat menambahkan akun petugas baru.');
+    return;
+  }
+
+  const nama_petugas = (document.getElementById('new-admin-fullname')?.value || '').trim();
+  const username = (document.getElementById('new-admin-username')?.value || '').trim().toLowerCase();
+  const role = document.getElementById('new-admin-role')?.value || 'Operator';
+  const password = (document.getElementById('new-admin-password')?.value || '').trim();
+
+  if (!nama_petugas || !username || !password) return;
+
+  if (adminAccountsList.some(a => a.username.toLowerCase() === username)) {
+    alert(`Username "${username}" sudah terdaftar.`);
+    return;
+  }
+
+  const newId = `ADM-0${adminAccountsList.length + 1}`;
+  const digest = await computeSha256Hex(`${username}:${password}`);
+
+  const newAcc = {
+    id_admin: newId,
+    username,
+    nama_petugas,
+    role,
+    status_aktif: 'Aktif',
+    pwd_FrontDigest: digest
+  };
+
+  adminAccountsList.push(newAcc);
+  saveAdminAccountsCache();
+  renderAdminAccountsTable();
+
+  try {
+    const res = await postToAppsScript({
+      action: 'manage_admin',
+      sub_action: 'add',
+      nama_petugas,
+      username,
+      password,
+      role
+    });
+    if (res && Array.isArray(res.admins)) {
+      adminAccountsList = res.admins;
+      saveAdminAccountsCache();
+      renderAdminAccountsTable();
+    }
+  } catch (err) {}
+
+  document.getElementById('new-admin-fullname').value = '';
+  document.getElementById('new-admin-username').value = '';
+  document.getElementById('new-admin-password').value = '';
+  showToast(`Akun petugas ${nama_petugas} (@${username}) berhasil ditambahkan!`);
+}
+
+async function handleToggleAdminAccountStatus(id_admin, username) {
+  if (!isSuperadmin()) return;
+  const target = adminAccountsList.find(a => a.id_admin === id_admin || a.username === username);
+  if (!target) return;
+
+  target.status_aktif = target.status_aktif === 'Aktif' ? 'Nonaktif' : 'Aktif';
+  saveAdminAccountsCache();
+  renderAdminAccountsTable();
+
+  try {
+    await postToAppsScript({
+      action: 'manage_admin',
+      sub_action: 'toggle_status',
+      id_admin,
+      username
+    });
+  } catch (err) {}
+
+  showToast(`Status akun @${username} diubah menjadi ${target.status_aktif}.`);
+}
+
+async function handleDeleteAdminAccount(id_admin, username) {
+  if (!isSuperadmin()) return;
+  if (adminAccountsList.length <= 1) {
+    alert('Tidak dapat menghapus satu-satunya akun Admin yang tersisa.');
+    return;
+  }
+  if (!confirm(`Hapus akses petugas @${username} (${id_admin}) secara permanen?`)) return;
+
+  adminAccountsList = adminAccountsList.filter(a => a.id_admin !== id_admin && a.username !== username);
+  saveAdminAccountsCache();
+  renderAdminAccountsTable();
+
+  try {
+    await postToAppsScript({
+      action: 'manage_admin',
+      sub_action: 'delete',
+      id_admin,
+      username
+    });
+  } catch (err) {}
+
+  showToast(`Akun petugas @${username} telah dihapus.`);
+}
+
+// ============================================================================
+// 3.3 MODUL MANAJEMEN ANTREAN & CETAK (MODE ADMIN)
+// ============================================================================
 
 function switchAdminSubTab(subTab) {
   currentAdminSubTab = subTab;
-
-  ['requests', 'units', 'template'].forEach(key => {
+  ['requests', 'template', 'admins', 'units'].forEach(key => {
     const btn = document.getElementById(`admin-tab-btn-${key}`);
     const topBtn = document.getElementById(`admin-top-tab-${key}`);
     const view = document.getElementById(`admin-view-${key}`);
 
     if (view) {
-      if (key === subTab) {
-        view.classList.remove('hidden');
-      } else {
-        view.classList.add('hidden');
-      }
+      if (key === subTab) view.classList.remove('hidden');
+      else view.classList.add('hidden');
     }
 
     if (btn) {
-      if (key === subTab) {
-        btn.className = 'admin-subtab-btn px-3.5 py-1.5 rounded-xl text-xs font-bold bg-emerald-700 text-white shadow-xs transition flex items-center space-x-1.5 whitespace-nowrap';
-      } else {
-        btn.className = 'admin-subtab-btn px-3.5 py-1.5 rounded-xl text-xs font-semibold text-slate-600 hover:text-emerald-800 hover:bg-slate-100 transition flex items-center space-x-1.5 whitespace-nowrap';
-      }
+      btn.className = (key === subTab)
+        ? 'admin-subtab-btn px-4 py-2 rounded-xl text-xs font-bold bg-emerald-700 text-white shadow-xs transition flex items-center space-x-1.5 whitespace-nowrap'
+        : 'admin-subtab-btn px-4 py-2 rounded-xl text-xs font-semibold text-slate-600 hover:text-emerald-800 hover:bg-slate-100 transition flex items-center space-x-1.5 whitespace-nowrap';
     }
 
     if (topBtn) {
-      if (key === subTab) {
-        topBtn.className = 'px-3 py-1 rounded-lg font-bold text-xs transition flex items-center space-x-1.5 bg-emerald-700 text-white shadow-xs';
-      } else {
-        topBtn.className = 'px-3 py-1 rounded-lg font-semibold text-xs text-slate-300 hover:text-white hover:bg-slate-700/60 transition flex items-center space-x-1.5';
-      }
+      topBtn.className = (key === subTab)
+        ? 'px-3 py-1.5 rounded-lg font-bold text-xs transition flex items-center space-x-1.5 bg-emerald-700 text-white shadow-xs'
+        : 'px-3 py-1.5 rounded-lg font-semibold text-xs text-slate-300 hover:text-white hover:bg-slate-700/60 transition flex items-center space-x-1.5';
     }
   });
 
-  if (subTab === 'requests') {
-    renderAdminTable();
-  } else if (subTab === 'units') {
-    renderAdminUnitsList();
-  } else if (subTab === 'template') {
-    applyBackSettings();
-  }
+  if (subTab === 'requests') renderAdminTable();
+  else if (subTab === 'template') applyConfigToUI();
+  else if (subTab === 'admins') renderAdminAccountsTable();
+  else if (subTab === 'units') renderAdminUnitsList();
 }
-
-function toggleAdminMobileMenu() {
-  const menu = document.getElementById('admin-mobile-menu');
-  if (menu) {
-    menu.classList.toggle('hidden');
-  }
-}
-
-
-// =============================================================
-// ADMIN REQUESTS TABLE & STATUS MANIPULATION
-// =============================================================
 
 function setAdminFilter(status) {
   currentAdminFilter = status;
   document.querySelectorAll('.admin-filter-btn').forEach(btn => {
-    if (btn.dataset.adminFilter === status) {
-      btn.className = 'admin-filter-btn px-3 py-1.5 rounded-xl text-xs font-bold bg-emerald-700 text-white shadow-xs';
-    } else {
-      btn.className = 'admin-filter-btn px-3 py-1.5 rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-100';
-    }
+    btn.className = (btn.dataset.adminFilter === status)
+      ? 'admin-filter-btn px-3 py-1.5 rounded-xl text-xs font-bold bg-emerald-700 text-white shadow-xs'
+      : 'admin-filter-btn px-3 py-1.5 rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-100';
   });
   renderAdminTable();
+}
+
+function formatWhatsAppUrl(phoneStr) {
+  const digits = String(phoneStr || '').replace(/\D/g, '');
+  if (!digits) return '';
+  const intl = digits.startsWith('0') ? '62' + digits.slice(1) : digits;
+  return `https://wa.me/${intl}`;
 }
 
 function renderAdminTable() {
@@ -1729,38 +2058,29 @@ function renderAdminTable() {
 
   if (!tbody) return;
 
-  // Update Admin Statistics
   const total = idCardRecords.length;
   const pending = idCardRecords.filter(r => r.status === 'Menunggu Verifikasi').length;
   const printing = idCardRecords.filter(r => r.status === 'Sedang Dicetak').length;
   const completed = idCardRecords.filter(r => r.status === 'Selesai').length;
 
-  const statTotal = document.getElementById('admin-stat-total');
-  const statPending = document.getElementById('admin-stat-pending');
-  const statPrinting = document.getElementById('admin-stat-printing');
-  const statCompleted = document.getElementById('admin-stat-completed');
+  const setTxt = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
+  setTxt('admin-stat-total', total);
+  setTxt('admin-stat-pending', pending);
+  setTxt('admin-stat-printing', printing);
+  setTxt('admin-stat-completed', completed);
+  setTxt('admin-badge-req-count', total);
+  setTxt('admin-top-badge-req-count', total);
 
-  if (statTotal) statTotal.textContent = total;
-  if (statPending) statPending.textContent = pending;
-  if (statPrinting) statPrinting.textContent = printing;
-  if (statCompleted) statCompleted.textContent = completed;
-
-  const badgeCount = document.getElementById('admin-badge-req-count');
-  if (badgeCount) badgeCount.textContent = total;
-
-  const topBadge = document.getElementById('admin-top-badge-req-count');
-  if (topBadge) topBadge.textContent = total;
-
-  let filtered = idCardRecords.filter(item => {
+  const filtered = idCardRecords.filter(item => {
     const matchesFilter = (currentAdminFilter === 'all') || (item.status === currentAdminFilter);
-    const matchesUnit = (selectedUnit === 'all') || (item.bidang === selectedUnit);
+    const matchesUnit = (selectedUnit === 'all') || (item.unitKerja === selectedUnit);
     const matchesSearch = !search ||
-      item.id.toLowerCase().includes(search) ||
-      item.name.toLowerCase().includes(search) ||
-      item.nip.toLowerCase().includes(search) ||
-      item.bidang.toLowerCase().includes(search) ||
-      item.jabatan.toLowerCase().includes(search);
-
+      (item.tiket || '').toLowerCase().includes(search) ||
+      (item.nama || '').toLowerCase().includes(search) ||
+      (item.nip || '').toLowerCase().includes(search) ||
+      (item.no_hp || '').toLowerCase().includes(search) ||
+      (item.unitKerja || '').toLowerCase().includes(search) ||
+      (item.jabatan || '').toLowerCase().includes(search);
     return matchesFilter && matchesUnit && matchesSearch;
   });
 
@@ -1769,85 +2089,80 @@ function renderAdminTable() {
   if (filtered.length === 0) {
     if (emptyState) emptyState.classList.remove('hidden');
     return;
-  } else {
-    if (emptyState) emptyState.classList.add('hidden');
   }
+  if (emptyState) emptyState.classList.add('hidden');
 
   filtered.forEach(record => {
     const tr = document.createElement('tr');
     tr.className = 'hover:bg-slate-50 transition border-b border-slate-100';
 
-    const hasPhoto = Boolean(record.photo && record.photoReady === 'ready');
-    const photoMarkup = hasPhoto
-      ? `<img src="${record.photo}" alt="${record.name}" class="w-10 h-10 rounded-xl object-contain bg-slate-100 border border-slate-200 shadow-xs flex-shrink-0">`
-      : `<div class="w-10 h-10 rounded-xl bg-slate-100 border border-dashed border-slate-300 flex-shrink-0 flex flex-col items-center justify-center text-slate-400" title="Foto belum diunggah">
-           <i class="fa-solid fa-user text-xs text-slate-400"></i>
-           <span class="text-[7.5px] font-bold text-slate-500 leading-none mt-0.5">No Foto</span>
-         </div>`;
+    const avatarSrc = getTableAvatarSrc(record);
+    const phoneVal = (record.no_hp || record.whatsapp || '').trim();
+    const waUrl = formatWhatsAppUrl(phoneVal);
+    const contactHtml = phoneVal
+      ? `<a href="${waUrl}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center space-x-1.5 px-2.5 py-1 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 font-mono font-bold text-xs transition" title="Hubungi Pegawai via WhatsApp">
+           <i class="fa-brands fa-whatsapp text-emerald-600 text-sm"></i>
+           <span>${escapeHtml(phoneVal)}</span>
+         </a>`
+      : `<span class="text-xs text-slate-400 italic">Belum diisi</span>`;
 
     tr.innerHTML = `
-      <td class="py-3.5 px-4 sm:px-6 align-middle font-mono font-bold text-xs text-emerald-800 whitespace-nowrap">
-        <div class="flex items-center space-x-1.5">
-          <i class="fa-solid fa-ticket text-emerald-600"></i>
-          <span>${record.id}</span>
-        </div>
+      <td class="py-3.5 px-4 sm:px-5 align-middle font-mono font-bold text-xs text-emerald-800 whitespace-nowrap">
+        ${escapeHtml(record.tiket)}
       </td>
-
-      <td class="py-3.5 px-4 sm:px-6 align-middle">
+      <td class="py-3.5 px-4 sm:px-5 align-middle">
         <div class="flex items-center space-x-3">
-          ${photoMarkup}
+          <img src="${avatarSrc}" alt="${escapeHtml(record.nama)}" onerror="this.src='${DEFAULT_TABLE_AVATAR}'" class="avatar-table-thumb" style="width: 40px; height: 40px; border-radius: 4px; object-fit: cover;">
           <div>
-            <h4 class="font-bold text-slate-900 leading-tight">${record.name}</h4>
-            <div class="flex items-center space-x-2 mt-0.5">
-              <span class="text-xs text-slate-500 font-mono">NIP. ${record.nip}</span>
-              ${!hasPhoto ? '<span class="text-[9px] font-bold px-1.5 py-0.2 rounded bg-amber-50 text-amber-700 border border-amber-200 flex items-center space-x-1"><i class="fa-solid fa-camera text-[8px]"></i><span>Foto Bag. Umum</span></span>' : ''}
-            </div>
+            <h4 class="font-bold text-slate-900 leading-tight">${escapeHtml(record.nama)}</h4>
+            <span class="text-xs text-slate-500 font-mono">NIP. ${escapeHtml(record.nip)}</span>
           </div>
         </div>
       </td>
-
-      <td class="py-3.5 px-4 sm:px-6 align-middle">
-        <p class="font-bold text-emerald-900 text-xs">${record.bidang}</p>
-        <p class="text-xs text-slate-500 font-medium">${record.jabatan}</p>
+      <td class="py-3.5 px-4 sm:px-5 align-middle whitespace-nowrap">
+        ${contactHtml}
       </td>
-
-      <td class="py-3.5 px-4 sm:px-6 align-middle text-xs text-slate-500 whitespace-nowrap">
-        ${record.createdAt}
+      <td class="py-3.5 px-4 sm:px-5 align-middle">
+        <p class="font-bold text-emerald-950 text-xs">${escapeHtml(record.unitKerja)}</p>
+        <p class="text-xs text-slate-500">${escapeHtml(record.jabatan)}</p>
       </td>
-
-      <td class="py-3.5 px-4 sm:px-6 align-middle text-center whitespace-nowrap">
-        <select onchange="handleAdminStatusChange('${record.id}', this.value)" class="text-xs font-bold px-3 py-1.5 rounded-xl border border-slate-300 focus:ring-2 focus:ring-emerald-600 shadow-xs cursor-pointer ${
+      <td class="py-3.5 px-4 sm:px-5 align-middle text-xs text-slate-500 whitespace-nowrap">
+        ${escapeHtml(record.tanggal)}
+      </td>
+      <td class="py-3.5 px-4 sm:px-5 align-middle text-center whitespace-nowrap">
+        <select onchange="handleAdminStatusChange('${escapeHtml(record.tiket)}', this.value)" class="text-xs font-bold px-3 py-1.5 rounded-xl border cursor-pointer ${
           record.status === 'Selesai' ? 'bg-emerald-50 text-emerald-800 border-emerald-300' :
           record.status === 'Sedang Dicetak' ? 'bg-sky-50 text-sky-800 border-sky-300' :
           'bg-amber-50 text-amber-800 border-amber-300'
         }">
-          <option value="Menunggu Verifikasi" ${record.status === 'Menunggu Verifikasi' ? 'selected' : ''}>⏳ Belum Dikerjakan</option>
-          <option value="Sedang Dicetak" ${record.status === 'Sedang Dicetak' ? 'selected' : ''}>🖨️ Sedang Dikerjakan</option>
-          <option value="Selesai" ${record.status === 'Selesai' ? 'selected' : ''}>✅ Sudah Selesai</option>
+          <option value="Menunggu Verifikasi" ${record.status === 'Menunggu Verifikasi' ? 'selected' : ''}>Menunggu Verifikasi</option>
+          <option value="Sedang Dicetak" ${record.status === 'Sedang Dicetak' ? 'selected' : ''}>Sedang Dicetak</option>
+          <option value="Selesai" ${record.status === 'Selesai' ? 'selected' : ''}>Selesai</option>
         </select>
       </td>
-
-      <td class="py-3.5 px-4 sm:px-6 align-middle text-center whitespace-nowrap">
-        <div class="flex items-center justify-center space-x-1">
-          <button type="button" onclick="openAdminEditModal('${record.id}')" class="p-2 rounded-xl text-slate-500 hover:text-amber-700 hover:bg-amber-50 text-xs transition" title="Edit Data Pegawai">
-            <i class="fa-solid fa-user-pen"></i>
+      <td class="py-3.5 px-4 sm:px-5 align-middle text-center whitespace-nowrap">
+        <div class="flex items-center justify-center space-x-1.5">
+          <button type="button" onclick="openAdminEditModal('${escapeHtml(record.tiket)}')" class="px-2.5 py-1.5 rounded-lg bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200 font-bold text-xs transition flex items-center space-x-1" title="Edit Biodata Pegawai">
+            <i class="fa-solid fa-pen-to-square"></i>
+            <span>Edit</span>
           </button>
-          <button type="button" onclick="openAdminPrintModal('${record.id}')" class="p-2 rounded-xl text-slate-500 hover:text-emerald-700 hover:bg-emerald-50 text-xs transition" title="Pratinjau & Cetak ID Card">
+          <button type="button" onclick="openAdminPrintModal('${escapeHtml(record.tiket)}')" class="px-2.5 py-1.5 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 font-bold text-xs transition flex items-center space-x-1" title="Cetak Kartu">
             <i class="fa-solid fa-print"></i>
+            <span>Cetak</span>
           </button>
-          <button type="button" onclick="handleAdminDeleteRecord('${record.id}')" class="p-2 rounded-xl text-slate-400 hover:text-rose-600 hover:bg-rose-50 text-xs transition" title="Hapus Permintaan">
+          <button type="button" onclick="handleAdminDeleteRecord('${escapeHtml(record.tiket)}')" class="px-2.5 py-1.5 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 font-bold text-xs transition flex items-center space-x-1" title="Hapus Data">
             <i class="fa-solid fa-trash-can"></i>
+            <span>Hapus</span>
           </button>
         </div>
       </td>
     `;
-
     tbody.appendChild(tr);
   });
 }
 
-function handleAdminStatusChange(id, newStatus) {
-  const record = idCardRecords.find(r => r.id === id);
+function handleAdminStatusChange(tiket, newStatus) {
+  const record = idCardRecords.find(r => r.tiket === tiket || r.id === tiket);
   if (!record) return;
 
   record.status = newStatus;
@@ -1855,55 +2170,48 @@ function handleAdminStatusChange(id, newStatus) {
   renderAdminTable();
   renderDashboardTable();
 
-  // Sinkronkan perubahan status ke backend Google Apps Script
-  updateStatusOnBackend(id, newStatus);
-  showToast(`Status kartu ${id} diubah menjadi "${newStatus}"!`);
+  updateRecordOnBackend(record);
+  showToast(`Status tiket ${tiket} diperbarui menjadi "${newStatus}".`);
 }
 
-function handleAdminDeleteRecord(id) {
-  const record = idCardRecords.find(r => r.id === id);
+function handleAdminDeleteRecord(tiket) {
+  const record = idCardRecords.find(r => r.tiket === tiket || r.id === tiket);
   if (!record) return;
 
-  if (!confirm(`Hapus permohonan ID Card untuk ${record.name} (${record.id})?`)) return;
+  if (!confirm(`Apakah Anda yakin ingin menghapus data pengajuan ${record.nama} (${record.tiket})?`)) return;
 
-  idCardRecords = idCardRecords.filter(r => r.id !== id);
+  idCardRecords = idCardRecords.filter(r => r.tiket !== tiket && r.id !== tiket);
   saveDataToStorage();
   renderAdminTable();
   renderDashboardTable();
 
-  // Hapus dari backend Google Apps Script
-  deleteRecordOnBackend(id);
-  showToast(`Permohonan ${id} berhasil dihapus.`);
+  deleteRecordOnBackend(tiket);
+  showToast(`Data pengajuan ${tiket} telah dihapus.`);
 }
 
-
-// =============================================================
-// ADMIN EDIT & ADD EMPLOYEE MODALS
-// =============================================================
-
+// Modal Edit Biodata Pegawai (PRD 3.3.1 - termasuk Nomor HP/WhatsApp eksklusif Admin)
 let adminEditPhotoData = null;
 
-function openAdminEditModal(id) {
-  const record = idCardRecords.find(r => r.id === id);
+function openAdminEditModal(tiket) {
+  const record = idCardRecords.find(r => r.tiket === tiket || r.id === tiket);
   if (!record) return;
 
-  document.getElementById('admin-edit-id').value = record.id;
-  document.getElementById('admin-edit-badge-id').textContent = record.id;
-  document.getElementById('admin-edit-name').value = record.name;
-  document.getElementById('admin-edit-nip').value = record.nip;
-  document.getElementById('admin-edit-status').value = record.status;
-  document.getElementById('admin-edit-jabatan').value = record.jabatan;
-  document.getElementById('admin-edit-date').value = record.date || '2026-10-14';
-
   populateUnitDropdowns();
-  document.getElementById('admin-edit-bidang').value = record.bidang;
+  document.getElementById('admin-edit-id').value = record.tiket;
+  document.getElementById('admin-edit-badge-id').textContent = record.tiket;
+  document.getElementById('admin-edit-name').value = record.nama;
+  document.getElementById('admin-edit-nip').value = record.nip;
+  const phoneInput = document.getElementById('admin-edit-phone');
+  if (phoneInput) phoneInput.value = record.no_hp || record.whatsapp || '';
+  document.getElementById('admin-edit-status').value = record.status;
+  document.getElementById('admin-edit-bidang').value = record.unitKerja;
+  document.getElementById('admin-edit-jabatan').value = record.jabatan;
+  document.getElementById('admin-edit-date').value = record.tanggal || getTodayDateString();
 
   const photoPreview = document.getElementById('admin-edit-photo-preview');
-  adminEditPhotoData = record.photo || null;
-  if (record.photo) {
-    photoPreview.src = record.photo;
-  } else {
-    photoPreview.src = 'assets/sample_pegawai_setengah_badan.png';
+  adminEditPhotoData = record.foto || DEFAULT_TABLE_AVATAR;
+  if (photoPreview) {
+    photoPreview.src = getTableAvatarSrc(record);
   }
 
   const fileInput = document.getElementById('admin-edit-photo-file');
@@ -1911,14 +2219,19 @@ function openAdminEditModal(id) {
     fileInput.value = '';
     fileInput.onchange = (e) => {
       const file = e.target.files[0];
-      if (file) {
-        const reader = new FileReader();
-        reader.onload = (re) => {
-          adminEditPhotoData = re.target.result;
-          photoPreview.src = adminEditPhotoData;
-        };
-        reader.readAsDataURL(file);
+      if (!file) return;
+      const check = validatePhotoFileObject(file);
+      if (!check.valid) {
+        alert(check.message);
+        fileInput.value = '';
+        return;
       }
+      const reader = new FileReader();
+      reader.onload = (re) => {
+        adminEditPhotoData = re.target.result;
+        if (photoPreview) photoPreview.src = adminEditPhotoData;
+      };
+      reader.readAsDataURL(file);
     };
   }
 
@@ -1931,20 +2244,44 @@ function closeAdminEditModal() {
 
 function handleAdminSaveEdit(e) {
   e.preventDefault();
-  const id = document.getElementById('admin-edit-id').value;
-  const record = idCardRecords.find(r => r.id === id);
+  const tiket = document.getElementById('admin-edit-id').value;
+  const record = idCardRecords.find(r => r.tiket === tiket || r.id === tiket);
   if (!record) return;
 
-  record.name = document.getElementById('admin-edit-name').value.trim();
-  record.nip = document.getElementById('admin-edit-nip').value.trim();
-  record.status = document.getElementById('admin-edit-status').value;
-  record.bidang = document.getElementById('admin-edit-bidang').value;
-  record.jabatan = document.getElementById('admin-edit-jabatan').value.trim();
-  record.date = document.getElementById('admin-edit-date').value || record.date;
+  const nama = document.getElementById('admin-edit-name').value.trim();
+  const nip = document.getElementById('admin-edit-nip').value.trim();
+  const no_hp = (document.getElementById('admin-edit-phone')?.value || '').replace(/\D/g, '').trim();
+  const status = document.getElementById('admin-edit-status').value;
+  const unitKerja = document.getElementById('admin-edit-bidang').value.trim();
+  const jabatan = document.getElementById('admin-edit-jabatan').value.trim();
+  const tanggal = document.getElementById('admin-edit-date').value || record.tanggal;
+
+  if (!NIP_REGEX.test(nip)) {
+    alert('Format NIP tidak valid! NIP wajib berupa tepat 18 digit angka.');
+    return;
+  }
+
+  if (!PHONE_REGEX.test(no_hp)) {
+    alert('Nomor HP / WhatsApp tidak valid! Masukkan 9 s.d. 16 digit angka.');
+    return;
+  }
+
+  record.nama = nama;
+  record.name = nama;
+  record.nip = nip;
+  record.no_hp = no_hp;
+  record.whatsapp = no_hp;
+  record.status = status;
+  record.unitKerja = unitKerja;
+  record.bidang = unitKerja;
+  record.jabatan = jabatan;
+  record.tanggal = tanggal;
+  record.date = tanggal;
 
   if (adminEditPhotoData) {
+    record.foto = adminEditPhotoData;
     record.photo = adminEditPhotoData;
-    record.photoReady = 'ready';
+    record.photoReady = (adminEditPhotoData !== DEFAULT_TABLE_AVATAR) ? 'ready' : 'not_ready';
   }
 
   saveDataToStorage();
@@ -1952,34 +2289,43 @@ function handleAdminSaveEdit(e) {
   renderDashboardTable();
   closeAdminEditModal();
 
-  // Sinkronkan edit pegawai ke backend Google Apps Script
   updateRecordOnBackend(record);
-  showToast(`Data pegawai ${record.name} berhasil diperbarui!`);
+  showToast(`Biodata pegawai ${nama} (${tiket}) berhasil diperbarui!`);
 }
 
+// Modal Tambah Pengajuan dari Panel Admin
 let adminAddPhotoData = null;
 
 function openAdminAddEmployeeModal() {
   populateUnitDropdowns();
   document.getElementById('admin-add-name').value = '';
   document.getElementById('admin-add-nip').value = '';
+  const phoneInput = document.getElementById('admin-add-phone');
+  if (phoneInput) phoneInput.value = '';
   document.getElementById('admin-add-jabatan').value = '';
   document.getElementById('admin-add-status').value = 'Sedang Dicetak';
+  adminAddPhotoData = null;
+
   const fileInput = document.getElementById('admin-add-photo-file');
   if (fileInput) {
     fileInput.value = '';
     fileInput.onchange = (e) => {
       const file = e.target.files[0];
-      if (file) {
-        const reader = new FileReader();
-        reader.onload = (re) => {
-          adminAddPhotoData = re.target.result;
-        };
-        reader.readAsDataURL(file);
+      if (!file) return;
+      const check = validatePhotoFileObject(file);
+      if (!check.valid) {
+        alert(check.message);
+        fileInput.value = '';
+        return;
       }
+      const reader = new FileReader();
+      reader.onload = (re) => {
+        adminAddPhotoData = re.target.result;
+      };
+      reader.readAsDataURL(file);
     };
   }
-  adminAddPhotoData = null;
+
   document.getElementById('modal-admin-add').classList.remove('hidden');
 }
 
@@ -1989,31 +2335,40 @@ function closeAdminAddEmployeeModal() {
 
 function handleAdminSubmitNewEmployee(e) {
   e.preventDefault();
-  const name = document.getElementById('admin-add-name').value.trim();
+  const nama = document.getElementById('admin-add-name').value.trim();
   const nip = document.getElementById('admin-add-nip').value.trim();
+  const no_hp = (document.getElementById('admin-add-phone')?.value || '').replace(/\D/g, '').trim();
   const jabatan = document.getElementById('admin-add-jabatan').value.trim();
-  const bidang = document.getElementById('admin-add-bidang').value;
+  const unitKerja = document.getElementById('admin-add-bidang').value.trim();
   const status = document.getElementById('admin-add-status').value;
 
-  const randomSuffix = Math.floor(1000 + Math.random() * 9000);
-  const newRegId = `KMN-2026-${randomSuffix}`;
+  if (!NIP_REGEX.test(nip)) {
+    alert('Format NIP tidak valid! NIP wajib berupa tepat 18 digit angka numerik.');
+    return;
+  }
 
-  const now = new Date();
-  const formattedTime = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')} ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
-  const dateStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+  if (!PHONE_REGEX.test(no_hp)) {
+    alert('Nomor HP / WhatsApp tidak valid! Masukkan 9 s.d. 16 digit angka.');
+    return;
+  }
 
-  const newRecord = {
-    id: newRegId,
-    name,
+  const tiket = generateTicketCode();
+  const tanggal = getTodayDateString();
+  const foto = adminAddPhotoData || DEFAULT_TABLE_AVATAR;
+
+  const newRecord = normalizeRecord({
+    tiket,
+    tanggal,
+    nama,
     nip,
-    bidang,
+    no_hp,
+    whatsapp: no_hp,
+    unitKerja,
     jabatan,
-    date: dateStr,
+    foto,
     photoReady: adminAddPhotoData ? 'ready' : 'not_ready',
-    photo: adminAddPhotoData || null,
-    status,
-    createdAt: formattedTime
-  };
+    status
+  });
 
   idCardRecords.unshift(newRecord);
   saveDataToStorage();
@@ -2021,49 +2376,283 @@ function handleAdminSubmitNewEmployee(e) {
   renderDashboardTable();
   closeAdminAddEmployeeModal();
 
-  // Sinkronkan penambahan pegawai baru ke backend Google Apps Script
-  sendRecordToBackend(newRecord, 'create');
-  showToast(`Permohonan ${newRegId} (${name}) berhasil ditambahkan!`);
+  sendRecordToBackend(newRecord);
+  showToast(`Pengajuan ${tiket} (${nama}) berhasil ditambahkan!`);
 }
 
+// ============================================================================
+// 3.4 MODUL KONFIGURASI DINAMIS: PERGANTIAN PIMPINAN & TEMPLATE KARTU
+// ============================================================================
 
-// =============================================================
-// PRINTING INTEGRATION (CR-80 DUAL-CARD BROWSER PRINT)
-// =============================================================
+function loadConfigFromStorage() {
+  const saved = localStorage.getItem(CONFIG_STORAGE_KEY);
+  if (saved) {
+    try {
+      appConfig = Object.assign({}, DEFAULT_CONFIG, JSON.parse(saved));
+    } catch (e) {
+      appConfig = { ...DEFAULT_CONFIG };
+    }
+  } else {
+    appConfig = { ...DEFAULT_CONFIG };
+    saveConfigToStorage();
+  }
+}
 
-function openAdminPrintModal(id) {
-  const record = idCardRecords.find(r => r.id === id);
+function saveConfigToStorage() {
+  localStorage.setItem(CONFIG_STORAGE_KEY, JSON.stringify(appConfig));
+}
+
+function applyConfigToUI() {
+  const setVal = (id, val) => {
+    const el = document.getElementById(id);
+    if (el) el.value = val !== undefined ? val : '';
+  };
+
+  setVal('setting-kepala-name', appConfig.nama_pimpinan);
+  setVal('setting-kepala-nip', appConfig.nip_pimpinan);
+  setVal('setting-kepala-title', appConfig.jabatan_pimpinan);
+  setVal('setting-ttd-url', appConfig.ttd_pimpinan_url);
+  setVal('setting-alamat-1', appConfig.alamat_kantor_1);
+  setVal('setting-alamat-2', appConfig.alamat_kantor_2);
+  setVal('setting-template-aktif', appConfig.template_aktif);
+  setVal('setting-opsi-cetak', appConfig.opsi_cetak);
+  setVal('setting-bg-depan-url', appConfig.bg_depan_url);
+  setVal('setting-bg-belakang-url', appConfig.bg_belakang_url);
+
+  currentFormPhotoRatio = 'cutout';
+
+  previewBackSettingsLive();
+  updateLivePreview();
+}
+
+function handleConfigImageUpload(event, targetType) {
+  const file = event.target.files[0];
+  if (!file) return;
+
+  const check = validatePhotoFileObject(file);
+  if (!check.valid) {
+    alert(check.message);
+    event.target.value = '';
+    return;
+  }
+
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    const dataUrl = e.target.result;
+    if (targetType === 'ttd') {
+      document.getElementById('setting-ttd-url').value = dataUrl;
+    } else if (targetType === 'bg_depan') {
+      document.getElementById('setting-bg-depan-url').value = dataUrl;
+    } else if (targetType === 'bg_belakang') {
+      document.getElementById('setting-bg-belakang-url').value = dataUrl;
+    }
+    previewBackSettingsLive();
+  };
+  reader.readAsDataURL(file);
+}
+
+function clearConfigImage(targetType) {
+  if (targetType === 'ttd') {
+    document.getElementById('setting-ttd-url').value = '';
+    const f = document.getElementById('setting-ttd-file');
+    if (f) f.value = '';
+  } else if (targetType === 'bg_depan') {
+    document.getElementById('setting-bg-depan-url').value = '';
+    const f = document.getElementById('setting-bg-depan-file');
+    if (f) f.value = '';
+  } else if (targetType === 'bg_belakang') {
+    document.getElementById('setting-bg-belakang-url').value = '';
+    const f = document.getElementById('setting-bg-belakang-file');
+    if (f) f.value = '';
+  }
+  previewBackSettingsLive();
+}
+
+function switchAdminConfigPreview(side) {
+  const front = document.getElementById('admin-cfg-card-front');
+  const back = document.getElementById('admin-cfg-card-back');
+  const btnFront = document.getElementById('admin-cfg-btn-front');
+  const btnBack = document.getElementById('admin-cfg-btn-back');
+
+  if (side === 'front') {
+    front?.classList.remove('hidden');
+    back?.classList.add('hidden');
+    if (btnFront) btnFront.className = 'px-2.5 py-1 rounded text-[11px] font-bold bg-emerald-700 text-white';
+    if (btnBack) btnBack.className = 'px-2.5 py-1 rounded text-[11px] font-bold text-slate-400 hover:text-white';
+  } else {
+    front?.classList.add('hidden');
+    back?.classList.remove('hidden');
+    if (btnBack) btnBack.className = 'px-2.5 py-1 rounded text-[11px] font-bold bg-emerald-700 text-white';
+    if (btnFront) btnFront.className = 'px-2.5 py-1 rounded text-[11px] font-bold text-slate-400 hover:text-white';
+  }
+}
+
+function previewBackSettingsLive() {
+  const nama_pimpinan = (document.getElementById('setting-kepala-name')?.value || '').trim() || DEFAULT_CONFIG.nama_pimpinan;
+  const nip_pimpinan = (document.getElementById('setting-kepala-nip')?.value || '').trim() || DEFAULT_CONFIG.nip_pimpinan;
+  const jabatan_pimpinan = (document.getElementById('setting-kepala-title')?.value || '').trim() || DEFAULT_CONFIG.jabatan_pimpinan;
+  const ttd_pimpinan_url = (document.getElementById('setting-ttd-url')?.value || '').trim();
+  const alamat1 = (document.getElementById('setting-alamat-1')?.value || '').trim() || DEFAULT_CONFIG.alamat_kantor_1;
+  const alamat2 = (document.getElementById('setting-alamat-2')?.value || '').trim() || DEFAULT_CONFIG.alamat_kantor_2;
+  const template_aktif = document.getElementById('setting-template-aktif')?.value || 'template_1';
+  const bg_depan_url = (document.getElementById('setting-bg-depan-url')?.value || '').trim();
+  const bg_belakang_url = (document.getElementById('setting-bg-belakang-url')?.value || '').trim();
+
+  const setTxt = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
+  setTxt('admin-preview-alamat1', alamat1);
+  setTxt('admin-preview-alamat2', alamat2);
+  setTxt('admin-preview-kepala-title', jabatan_pimpinan);
+  setTxt('admin-preview-kepala-name', nama_pimpinan);
+  setTxt('admin-preview-kepala-nip', `NIP. ${nip_pimpinan}`);
+
+  const ttdImg = document.getElementById('admin-preview-ttd-img');
+  if (ttdImg) {
+    if (ttd_pimpinan_url) {
+      ttdImg.src = ttd_pimpinan_url;
+      ttdImg.classList.remove('hidden');
+    } else {
+      ttdImg.classList.add('hidden');
+    }
+  }
+
+  const cfgFront = document.getElementById('admin-cfg-card-front');
+  const cfgBack = document.getElementById('admin-cfg-card-back');
+  const cfgPhotoLayer = document.getElementById('admin-cfg-photo-layer');
+
+  if (cfgFront) {
+    cfgFront.classList.remove('theme-template_1', 'theme-template_2', 'theme-template_3');
+    cfgFront.classList.add(`theme-${template_aktif}`);
+    cfgFront.style.backgroundImage = bg_depan_url ? `url('${bg_depan_url}')` : '';
+  }
+  if (cfgBack) {
+    cfgBack.classList.remove('theme-template_1', 'theme-template_2', 'theme-template_3');
+    cfgBack.classList.add(`theme-${template_aktif}`);
+    cfgBack.style.backgroundImage = bg_belakang_url ? `url('${bg_belakang_url}')` : '';
+  }
+  applyPhotoRatioClass(cfgPhotoLayer);
+}
+
+async function handleSaveBackSettings(e) {
+  e.preventDefault();
+  const nip_pimpinan = (document.getElementById('setting-kepala-nip')?.value || '').trim();
+  if (!NIP_REGEX.test(nip_pimpinan)) {
+    alert('NIP Pimpinan wajib terdiri dari tepat 18 digit angka numerik!');
+    return;
+  }
+
+  appConfig = {
+    nama_pimpinan: (document.getElementById('setting-kepala-name')?.value || '').trim(),
+    nip_pimpinan: nip_pimpinan,
+    jabatan_pimpinan: (document.getElementById('setting-kepala-title')?.value || '').trim(),
+    masa_berlaku: appConfig.masa_berlaku || 'Selama Menjadi Pegawai',
+    ttd_pimpinan_url: (document.getElementById('setting-ttd-url')?.value || '').trim(),
+    aturan_kartu: '',
+    alamat_kantor_1: (document.getElementById('setting-alamat-1')?.value || '').trim(),
+    alamat_kantor_2: (document.getElementById('setting-alamat-2')?.value || '').trim(),
+    template_aktif: document.getElementById('setting-template-aktif')?.value || 'template_1',
+    opsi_cetak: document.getElementById('setting-opsi-cetak')?.value || '2_sisi',
+    rasio_foto: 'cutout',
+    bg_depan_url: (document.getElementById('setting-bg-depan-url')?.value || '').trim(),
+    bg_belakang_url: (document.getElementById('setting-bg-belakang-url')?.value || '').trim()
+  };
+
+  saveConfigToStorage();
+  applyConfigToUI();
+
+  // Kirim ke Backend Google Apps Script (action: "save_config")
+  try {
+    await postToAppsScript({
+      action: 'save_config',
+      config: appConfig
+    });
+  } catch (err) {
+    console.warn('Konfigurasi disimpan di lokal, gagal sinkron ke Sheets:', err);
+  }
+
+  showToast('Pengaturan Pejabat Pengesah & Template Kartu berhasil disimpan!');
+}
+
+function handleResetBackSettingsToDefault() {
+  if (!confirm('Kembalikan seluruh pengaturan pimpinan dan template kartu ke standar bawaan Kemenag?')) return;
+  appConfig = { ...DEFAULT_CONFIG };
+  saveConfigToStorage();
+  applyConfigToUI();
+  showToast('Pengaturan kartu telah dikembalikan ke default.');
+}
+
+// ============================================================================
+// CETAK KARTU (PRINT LAYOUT CR80 - 1 SISI ATAU 2 SISI) (PRD 3.3.3 & 3.4.2)
+// ============================================================================
+
+function openAdminPrintModal(tiket) {
+  const record = idCardRecords.find(r => r.tiket === tiket || r.id === tiket);
   if (!record) return;
 
   currentPrintingRecord = record;
+  currentPrintModeOverride = appConfig.opsi_cetak || '2_sisi';
 
-  // Front Preview
-  document.getElementById('print-modal-front-name').textContent = record.name.toUpperCase();
+  const sideSelector = document.getElementById('print-modal-side-selector');
+  if (sideSelector) sideSelector.value = currentPrintModeOverride;
+
+  renderPrintModalCards();
+  document.getElementById('modal-admin-print').classList.remove('hidden');
+}
+
+function handlePrintModalSideChange(mode) {
+  currentPrintModeOverride = mode;
+  renderPrintModalCards();
+}
+
+function renderPrintModalCards() {
+  if (!currentPrintingRecord) return;
+  const record = currentPrintingRecord;
+  const mode = currentPrintModeOverride || appConfig.opsi_cetak || '2_sisi';
+
+  const frontCard = document.getElementById('print-modal-card-front');
+  const backCard = document.getElementById('print-modal-card-back');
+  const backWrapper = document.getElementById('print-modal-back-wrapper');
+  const photoLayer = document.getElementById('print-modal-photo-layer');
+
+  applyCardTemplateVisuals(frontCard, backCard);
+  applyPhotoRatioClass(photoLayer);
+
+  if (backWrapper) {
+    if (mode === '1_sisi') backWrapper.classList.add('hidden');
+    else backWrapper.classList.remove('hidden');
+  }
+
+  // Isi Data Sisi Depan
+  document.getElementById('print-modal-front-name').textContent = record.nama.toUpperCase();
   document.getElementById('print-modal-front-nip').textContent = `NIP. ${record.nip}`;
 
   const frontPhoto = document.getElementById('print-modal-front-photo');
-  if (record.photo) {
-    frontPhoto.src = record.photo;
-    frontPhoto.classList.remove('hidden');
-  } else {
-    frontPhoto.src = 'assets/sample_pegawai_setengah_badan.png';
+  if (frontPhoto) {
+    frontPhoto.src = getCardPhotoSrc(record);
+    frontPhoto.style.objectFit = 'contain';
+    frontPhoto.style.objectPosition = 'bottom left';
   }
 
-  // Back Preview
-  document.getElementById('print-modal-back-name').textContent = record.name;
+  // Isi Data Sisi Belakang (Biodata + Konfigurasi Pimpinan Aktif, tanpa teks aturan & masa berlaku)
+  document.getElementById('print-modal-back-name').textContent = record.nama;
   document.getElementById('print-modal-back-nip').textContent = record.nip;
   document.getElementById('print-modal-back-jabatan').textContent = record.jabatan;
-  document.getElementById('print-modal-back-bidang').textContent = record.bidang;
-  document.getElementById('print-modal-back-date').textContent = `Banjarmasin, ${formatIndonesianDate(record.date || '2026-10-14')}`;
+  document.getElementById('print-modal-back-bidang').textContent = record.unitKerja;
+  document.getElementById('print-modal-back-alamat1').textContent = appConfig.alamat_kantor_1;
+  document.getElementById('print-modal-back-alamat2').textContent = appConfig.alamat_kantor_2;
+  document.getElementById('print-modal-back-date').textContent = `Banjarmasin, ${formatIndonesianDate(record.tanggal)}`;
+  document.getElementById('print-modal-back-kepala-title').textContent = appConfig.jabatan_pimpinan;
+  document.getElementById('print-modal-back-kepala-name').textContent = appConfig.nama_pimpinan;
+  document.getElementById('print-modal-back-kepala-nip').textContent = `NIP. ${appConfig.nip_pimpinan}`;
 
-  // Dynamic Kepala on Back
-  document.getElementById('print-modal-back-alamat1').textContent = cardBackSettings.alamat1;
-  document.getElementById('print-modal-back-alamat2').textContent = cardBackSettings.alamat2;
-  document.getElementById('print-modal-back-kepala-title').textContent = cardBackSettings.kepalaTitle;
-  document.getElementById('print-modal-back-kepala-name').textContent = cardBackSettings.kepalaName;
-  document.getElementById('print-modal-back-kepala-nip').textContent = `NIP. ${cardBackSettings.kepalaNip}`;
-
-  document.getElementById('modal-admin-print').classList.remove('hidden');
+  const printTtd = document.getElementById('print-modal-back-ttd-img');
+  if (printTtd) {
+    if (appConfig.ttd_pimpinan_url) {
+      printTtd.src = appConfig.ttd_pimpinan_url;
+      printTtd.classList.remove('hidden');
+    } else {
+      printTtd.classList.add('hidden');
+    }
+  }
 }
 
 function closeAdminPrintModal() {
@@ -2073,51 +2662,236 @@ function closeAdminPrintModal() {
 function triggerCardPrint() {
   if (!currentPrintingRecord) return;
   const record = currentPrintingRecord;
+  const mode = currentPrintModeOverride || appConfig.opsi_cetak || '2_sisi';
+  const tplClass = `theme-${appConfig.template_aktif || 'template_1'}`;
 
   const printContainer = document.getElementById('print-container');
   if (!printContainer) return;
 
-  const photoSrc = record.photo || 'assets/sample_pegawai_setengah_badan.png';
+  const photoSrc = getCardPhotoSrc(record);
+  const frontBgStyle = appConfig.bg_depan_url ? `style="background-image: url('${appConfig.bg_depan_url}');"` : '';
+  const backBgStyle = appConfig.bg_belakang_url ? `style="background-image: url('${appConfig.bg_belakang_url}');"` : '';
 
-  printContainer.innerHTML = `
-    <!-- FRONT CARD -->
-    <div class="kemenag-card kemenag-card-front">
+  const ttdHtml = appConfig.ttd_pimpinan_url
+    ? `<img src="${appConfig.ttd_pimpinan_url}" alt="TTD" class="back-ttd-img">`
+    : '';
+
+  const frontHtml = `
+    <div class="kemenag-card kemenag-card-front ${tplClass}" ${frontBgStyle}>
       <div class="kemenag-photo-layer">
-        <img src="${photoSrc}" alt="${record.name}" class="kemenag-photo-img">
+        <img src="${photoSrc}" alt="${escapeHtml(record.nama)}" class="kemenag-photo-img">
       </div>
       <div class="kemenag-wave-overlay"></div>
       <div class="kemenag-front-text">
-        <h3 class="kemenag-front-name">${record.name.toUpperCase()}</h3>
-        <p class="kemenag-front-nip">NIP. ${record.nip}</p>
-      </div>
-    </div>
-
-    <!-- BACK CARD -->
-    <div class="kemenag-card kemenag-card-back">
-      <div class="kemenag-back-content">
-        <p class="back-text-item back-label-gap uppercase">NAMA</p>
-        <p class="back-text-item back-section-gap font-bold">${record.name}</p>
-
-        <p class="back-text-item back-label-gap uppercase">NIP</p>
-        <p class="back-text-item back-section-gap font-mono">${record.nip}</p>
-
-        <p class="back-text-item back-label-gap uppercase">JABATAN</p>
-        <p class="back-text-item">${record.jabatan}</p>
-        <p class="back-text-item back-section-gap">${record.bidang}</p>
-
-        <p class="back-text-item back-label-gap uppercase">ALAMAT KANTOR</p>
-        <p class="back-text-item">${cardBackSettings.alamat1}</p>
-        <p class="back-text-item back-section-gap">${cardBackSettings.alamat2}</p>
-
-        <p class="back-text-item back-section-gap">Banjarmasin, ${formatIndonesianDate(record.date || '2026-10-14')}</p>
-
-        <p class="back-kepala-title">${cardBackSettings.kepalaTitle}</p>
-        <p class="back-kepala-name">${cardBackSettings.kepalaName}</p>
-        <p class="back-kepala-nip">NIP. ${cardBackSettings.kepalaNip}</p>
+        <h3 class="kemenag-front-name">${escapeHtml(record.nama.toUpperCase())}</h3>
+        <p class="kemenag-front-nip">NIP. ${escapeHtml(record.nip)}</p>
       </div>
     </div>
   `;
 
+  const backHtml = mode === '2_sisi' ? `
+    <div class="kemenag-card kemenag-card-back ${tplClass}" ${backBgStyle}>
+      <div class="kemenag-back-content">
+        <p class="back-text-item back-label-gap uppercase">NAMA</p>
+        <p class="back-text-item back-section-gap">${escapeHtml(record.nama)}</p>
+
+        <p class="back-text-item back-label-gap uppercase">NIP</p>
+        <p class="back-text-item back-section-gap">${escapeHtml(record.nip)}</p>
+
+        <p class="back-text-item back-label-gap uppercase">JABATAN / UNIT KERJA</p>
+        <p class="back-text-item">${escapeHtml(record.jabatan)}</p>
+        <p class="back-text-item back-section-gap">${escapeHtml(record.unitKerja)}</p>
+
+        <p class="back-text-item back-label-gap uppercase">ALAMAT KANTOR</p>
+        <p class="back-text-item">${escapeHtml(appConfig.alamat_kantor_1)}</p>
+        <p class="back-text-item back-section-gap">${escapeHtml(appConfig.alamat_kantor_2)}</p>
+
+        <p class="back-text-item back-section-gap">Banjarmasin, ${formatIndonesianDate(record.tanggal)}</p>
+
+        <div class="back-signature-block">
+          <p class="back-kepala-title">${escapeHtml(appConfig.jabatan_pimpinan)}</p>
+          ${ttdHtml}
+          <p class="back-kepala-name">${escapeHtml(appConfig.nama_pimpinan)}</p>
+          <p class="back-kepala-nip">NIP. ${escapeHtml(appConfig.nip_pimpinan)}</p>
+        </div>
+      </div>
+    </div>
+  ` : '';
+
+  printContainer.innerHTML = frontHtml + backHtml;
   window.print();
 }
 
+// ============================================================================
+// KELOLA UNIT KERJA / BIDANG
+// ============================================================================
+
+function loadUnits() {
+  const saved = localStorage.getItem(UNITS_STORAGE_KEY);
+  if (saved) {
+    try {
+      kemenagUnits = JSON.parse(saved);
+      if (!Array.isArray(kemenagUnits) || kemenagUnits.length === 0) {
+        kemenagUnits = [...DEFAULT_KEMENAG_UNITS];
+      }
+    } catch (e) {
+      kemenagUnits = [...DEFAULT_KEMENAG_UNITS];
+    }
+  } else {
+    kemenagUnits = [...DEFAULT_KEMENAG_UNITS];
+    saveUnits();
+  }
+}
+
+function saveUnits() {
+  localStorage.setItem(UNITS_STORAGE_KEY, JSON.stringify(kemenagUnits));
+  populateUnitDropdowns();
+  renderAdminUnitsList();
+}
+
+function populateUnitDropdowns() {
+  const optionsHtml = kemenagUnits.map(unit => `<option value="${escapeHtml(unit)}">${escapeHtml(unit)}</option>`).join('');
+
+  ['form-bidang', 'admin-edit-bidang', 'admin-add-bidang'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) {
+      const currentVal = el.value;
+      el.innerHTML = optionsHtml;
+      if (kemenagUnits.includes(currentVal)) el.value = currentVal;
+    }
+  });
+
+  const adminFilterUnit = document.getElementById('admin-filter-unit');
+  if (adminFilterUnit) {
+    const currentVal = adminFilterUnit.value;
+    adminFilterUnit.innerHTML = '<option value="all">Semua Unit Kerja</option>' + optionsHtml;
+    if (currentVal && (currentVal === 'all' || kemenagUnits.includes(currentVal))) {
+      adminFilterUnit.value = currentVal;
+    }
+  }
+}
+
+function renderAdminUnitsList() {
+  const listContainer = document.getElementById('admin-units-list');
+  const countPill = document.getElementById('admin-total-units-pill');
+  const badgeCount = document.getElementById('admin-badge-units-count');
+
+  if (countPill) countPill.textContent = `${kemenagUnits.length} Unit`;
+  if (badgeCount) badgeCount.textContent = kemenagUnits.length;
+  if (!listContainer) return;
+
+  listContainer.innerHTML = '';
+  kemenagUnits.forEach((unit, index) => {
+    const item = document.createElement('div');
+    item.className = 'py-2.5 px-3 flex items-center justify-between hover:bg-slate-50 rounded-xl transition border-b border-slate-100 last:border-b-0';
+    item.innerHTML = `
+      <div class="flex items-center space-x-3">
+        <span class="w-6 h-6 rounded-lg bg-emerald-50 text-emerald-800 text-xs font-bold font-mono flex items-center justify-center border border-emerald-200">${index + 1}</span>
+        <span class="text-xs sm:text-sm font-bold text-slate-800">${escapeHtml(unit)}</span>
+      </div>
+      <div class="flex items-center space-x-1">
+        <button type="button" onclick="openEditUnitModal(${index})" class="p-1.5 rounded-lg text-slate-400 hover:text-amber-700 hover:bg-amber-50 text-xs"><i class="fa-solid fa-pen-to-square"></i></button>
+        <button type="button" onclick="deleteUnit(${index})" class="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 text-xs"><i class="fa-solid fa-trash-can"></i></button>
+      </div>
+    `;
+    listContainer.appendChild(item);
+  });
+}
+
+function handleAdminAddUnit(e) {
+  e.preventDefault();
+  const input = document.getElementById('admin-new-unit-input');
+  const newName = (input?.value || '').trim();
+  if (!newName) return;
+  if (kemenagUnits.includes(newName)) {
+    alert('Unit kerja tersebut sudah ada di dalam daftar.');
+    return;
+  }
+  kemenagUnits.push(newName);
+  saveUnits();
+  if (input) input.value = '';
+  showToast(`Unit kerja "${newName}" berhasil ditambahkan!`);
+}
+
+function openEditUnitModal(index) {
+  if (!kemenagUnits[index]) return;
+  document.getElementById('unit-edit-index').value = index;
+  document.getElementById('unit-edit-name-input').value = kemenagUnits[index];
+  document.getElementById('modal-unit-edit').classList.remove('hidden');
+}
+
+function closeEditUnitModal() {
+  document.getElementById('modal-unit-edit').classList.add('hidden');
+}
+
+function handleSaveEditedUnit(e) {
+  e.preventDefault();
+  const index = parseInt(document.getElementById('unit-edit-index').value, 10);
+  const newName = document.getElementById('unit-edit-name-input').value.trim();
+  if (!newName || isNaN(index) || !kemenagUnits[index]) return;
+
+  const oldName = kemenagUnits[index];
+  kemenagUnits[index] = newName;
+  idCardRecords.forEach(r => {
+    if (r.unitKerja === oldName) {
+      r.unitKerja = newName;
+      r.bidang = newName;
+    }
+  });
+  saveDataToStorage();
+  saveUnits();
+  renderAdminTable();
+  renderDashboardTable();
+  closeEditUnitModal();
+  showToast(`Unit kerja diperbarui menjadi "${newName}".`);
+}
+
+function deleteUnit(index) {
+  if (kemenagUnits.length <= 1) return;
+  const target = kemenagUnits[index];
+  if (!confirm(`Hapus unit kerja "${target}"?`)) return;
+  kemenagUnits.splice(index, 1);
+  saveUnits();
+  showToast(`Unit kerja "${target}" dihapus.`);
+}
+
+function handleResetUnitsToDefault() {
+  if (!confirm('Reset daftar unit kerja ke standar Kanwil Kemenag Kalsel?')) return;
+  kemenagUnits = [...DEFAULT_KEMENAG_UNITS];
+  saveUnits();
+  showToast('Daftar unit kerja direset ke standar default.');
+}
+
+// ============================================================================
+// UTILITAS UI & KEAMANAN TEKS
+// ============================================================================
+
+function escapeHtml(str) {
+  if (str === null || str === undefined) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+function showToast(message) {
+  const existing = document.getElementById('app-toast');
+  if (existing) existing.remove();
+
+  const toast = document.createElement('div');
+  toast.id = 'app-toast';
+  toast.className = 'fixed bottom-5 right-5 z-50 bg-slate-900 text-white px-4 py-3 rounded-2xl shadow-2xl flex items-center space-x-3 text-xs sm:text-sm font-semibold border border-slate-700';
+  toast.innerHTML = `
+    <i class="fa-solid fa-circle-check text-emerald-400 text-base"></i>
+    <span>${escapeHtml(message)}</span>
+  `;
+  document.body.appendChild(toast);
+
+  setTimeout(() => {
+    toast.style.opacity = '0';
+    toast.style.transition = 'opacity 0.5s ease';
+    setTimeout(() => toast.remove(), 500);
+  }, 3500);
+}

@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Cetak ID Card Pegawai - Kanwil Kemenag Prov. Kalimantan Selatan</title>
+  <title>CetakID Kemenag – Sistem Layanan Mandiri & Pengelolaan ID Card Pegawai</title>
   
   <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
@@ -40,72 +40,72 @@
 </head>
 <body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col">
 
-  <!-- ==================== PUBLIC NAVIGATION BAR (TASKBAR PEMOHON) ==================== -->
-  <!-- ==================== PUBLIC NAVIGATION BAR (TASKBAR PEMOHON) ==================== -->
+  <!-- ==================== 2.1 PUBLIC NAVIGATION BAR (MODE PEGAWAI) ==================== -->
   <header id="header-public" class="sticky top-0 z-50 bg-white/95 backdrop-blur-md border-b border-slate-200/80 shadow-xs">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-      <div class="flex items-center justify-between h-14">
+      <div class="flex items-center justify-between h-16">
         
-        <!-- Left Brand Logo & Title -->
-        <a href="#tata-cara" onclick="switchTab('tata-cara')" class="flex items-center space-x-2.5 group">
-          <div class="w-8 h-8 flex-shrink-0">
-            <img src="assets/logo_kemenag.png" alt="Logo Kemenag" class="w-full h-full object-contain group-hover:scale-105 transition-transform drop-shadow-xs">
+        <!-- Kiri: Logo CetakID Kemenag -->
+        <a href="#tata-cara" onclick="switchTab('tata-cara')" class="flex items-center space-x-3 group">
+          <div class="w-9 h-9 flex-shrink-0">
+            <img src="assets/logo_kemenag.png" alt="Logo CetakID Kemenag" class="w-full h-full object-contain group-hover:scale-105 transition-transform drop-shadow-xs">
           </div>
           <div>
             <div class="flex items-center space-x-1.5">
-              <span class="text-sm font-black tracking-tight text-emerald-950">CetakID</span>
-              <span class="text-[9px] font-extrabold px-1.5 py-0.2 rounded-md bg-emerald-100 text-emerald-800 uppercase tracking-wider">Kemenag</span>
+              <span class="text-base font-black tracking-tight text-emerald-950">CetakID</span>
+              <span class="text-[10px] font-extrabold px-1.5 py-0.5 rounded-md bg-emerald-100 text-emerald-800 uppercase tracking-wider">Kemenag</span>
             </div>
-            <p class="text-[10px] text-slate-500 font-semibold leading-none">Kanwil Prov. Kalimantan Selatan</p>
+            <p class="text-[10px] text-slate-500 font-semibold leading-none mt-0.5">Kanwil Prov. Kalimantan Selatan</p>
           </div>
         </a>
 
-        <!-- Center Sleek Segmented Pill Navigation Tabs -->
+        <!-- Tengah: Menu Tata Cara, Isi Formulir, dan Dashboard Status -->
         <nav class="hidden md:flex items-center p-1 rounded-2xl bg-slate-100/90 border border-slate-200/70 shadow-xs space-x-1">
-          <button id="nav-btn-tata-cara" onclick="switchTab('tata-cara')" class="nav-item flex items-center space-x-1.5 px-3.5 py-1.5 rounded-xl font-bold text-xs transition-all duration-200 text-white bg-emerald-700 shadow-xs">
+          <button id="nav-btn-tata-cara" onclick="switchTab('tata-cara')" class="nav-item flex items-center space-x-1.5 px-4 py-2 rounded-xl font-bold text-xs transition-all duration-200 text-white bg-emerald-700 shadow-xs">
             <i class="fa-solid fa-book-open text-xs"></i>
             <span>Tata Cara</span>
           </button>
 
-          <button id="nav-btn-formulir" onclick="switchTab('formulir')" class="nav-item flex items-center space-x-1.5 px-3.5 py-1.5 rounded-xl font-semibold text-xs transition-all duration-200 text-slate-600 hover:text-emerald-800 hover:bg-white/60">
+          <button id="nav-btn-formulir" onclick="switchTab('formulir')" class="nav-item flex items-center space-x-1.5 px-4 py-2 rounded-xl font-semibold text-xs transition-all duration-200 text-slate-600 hover:text-emerald-800 hover:bg-white/60">
             <i class="fa-solid fa-file-pen text-xs"></i>
             <span>Isi Formulir</span>
           </button>
 
-          <button id="nav-btn-dashboard" onclick="switchTab('dashboard')" class="nav-item flex items-center space-x-1.5 px-3.5 py-1.5 rounded-xl font-semibold text-xs transition-all duration-200 text-slate-600 hover:text-emerald-800 hover:bg-white/60">
-            <i class="fa-solid fa-chart-pie text-xs"></i>
+          <button id="nav-btn-dashboard" onclick="switchTab('dashboard')" class="nav-item flex items-center space-x-1.5 px-4 py-2 rounded-xl font-semibold text-xs transition-all duration-200 text-slate-600 hover:text-emerald-800 hover:bg-white/60">
+            <i class="fa-solid fa-table-list text-xs"></i>
             <span>Dashboard Status</span>
             <span id="nav-badge-count" class="ml-1 px-1.5 py-0.2 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800">0</span>
           </button>
         </nav>
 
-        <!-- Right Quick Actions: Sinkronisasi Sheets, Cek Status NIP & Admin Button -->
+        <!-- Kanan: Tombol Cek Status NIP & Tombol Login Admin -->
         <div class="hidden sm:flex items-center space-x-2">
-          <!-- Google Sheets Sync Indicator -->
-          <button id="gas-sync-indicator" onclick="syncWithBackend(false)" class="flex items-center space-x-1.5 px-2.5 py-1.5 text-xs font-semibold rounded-xl bg-slate-100 hover:bg-emerald-50 text-slate-700 hover:text-emerald-800 border border-slate-200 transition" title="Status Sinkronisasi Google Sheets (Klik untuk sinkronkan sekarang)">
+          <!-- Indikator Sinkronisasi Cloud -->
+          <button id="gas-sync-indicator" onclick="syncWithBackend(false)" class="flex items-center space-x-1.5 px-2.5 py-2 text-xs font-semibold rounded-xl bg-slate-100 hover:bg-emerald-50 text-slate-700 hover:text-emerald-800 border border-slate-200 transition" title="Status Koneksi Google Sheets (Klik untuk sinkronisasi)">
             <span class="w-2 h-2 rounded-full bg-slate-400"></span>
             <i class="fa-solid fa-cloud text-emerald-600 text-xs"></i>
-            <span id="gas-sync-label">Google Sheets</span>
+            <span id="gas-sync-label" class="hidden lg:inline">Sheets</span>
           </button>
 
-          <button onclick="openQuickTrackModal()" class="flex items-center space-x-1.5 px-3 py-1.5 text-xs font-bold rounded-xl border border-slate-200 text-slate-700 hover:border-emerald-300 hover:bg-emerald-50/60 hover:text-emerald-800 transition">
+          <!-- Tombol Cek Status NIP -->
+          <button onclick="openQuickTrackModal()" class="flex items-center space-x-1.5 px-3.5 py-2 text-xs font-bold rounded-xl border border-slate-200 text-slate-700 hover:border-emerald-300 hover:bg-emerald-50/60 hover:text-emerald-800 transition">
             <i class="fa-solid fa-magnifying-glass text-emerald-600"></i>
             <span>Cek Status NIP</span>
           </button>
 
-          <!-- Admin Button Container -->
+          <!-- Tombol Login Admin -->
           <div class="flex items-center space-x-1.5 pl-1 border-l border-slate-200">
-            <button id="btn-admin-nav" onclick="handleAdminNavClick()" class="flex items-center space-x-1.5 px-3 py-1.5 text-xs font-bold rounded-xl bg-slate-900 hover:bg-emerald-950 text-white transition shadow-xs border border-slate-800">
+            <button id="btn-admin-nav" onclick="handleAdminNavClick()" class="flex items-center space-x-1.5 px-3.5 py-2 text-xs font-bold rounded-xl bg-slate-900 hover:bg-emerald-950 text-white transition shadow-xs border border-slate-800">
               <i class="fa-solid fa-user-shield text-emerald-400 text-xs"></i>
               <span id="btn-admin-nav-text">Login Admin</span>
             </button>
-            <button id="btn-admin-logout" onclick="handleAdminLogout()" class="hidden px-2 py-1.5 text-xs font-bold rounded-xl border border-rose-200 text-rose-600 hover:bg-rose-50 transition" title="Logout Admin">
+            <button id="btn-admin-logout" onclick="handleAdminLogout()" class="hidden px-2.5 py-2 text-xs font-bold rounded-xl border border-rose-200 text-rose-600 hover:bg-rose-50 transition" title="Logout Admin">
               <i class="fa-solid fa-right-from-bracket"></i>
             </button>
           </div>
         </div>
 
-        <!-- Mobile Menu Toggle Button -->
+        <!-- Mobile Menu Toggle -->
         <div class="flex md:hidden items-center space-x-2">
           <button onclick="toggleMobileMenu()" class="p-2 rounded-xl text-slate-600 hover:text-slate-900 hover:bg-slate-100">
             <i class="fa-solid fa-bars text-lg"></i>
@@ -127,7 +127,7 @@
       </button>
       <button onclick="switchTab('dashboard'); toggleMobileMenu()" class="w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-left text-sm font-semibold text-slate-700 hover:bg-emerald-50 hover:text-emerald-700">
         <div class="flex items-center space-x-3">
-          <i class="fa-solid fa-chart-pie w-5 text-emerald-600"></i>
+          <i class="fa-solid fa-table-list w-5 text-emerald-600"></i>
           <span>Dashboard Status</span>
         </div>
         <span id="nav-badge-count-mobile" class="px-2 py-0.5 text-xs font-bold rounded-full bg-emerald-700 text-white">0</span>
@@ -135,7 +135,7 @@
       <div class="pt-2 border-t border-slate-100 space-y-1.5">
         <button onclick="openQuickTrackModal(); toggleMobileMenu()" class="w-full py-2.5 px-3 rounded-xl border border-slate-200 text-center text-xs font-bold text-slate-700 hover:bg-slate-50 flex items-center justify-center space-x-2">
           <i class="fa-solid fa-magnifying-glass text-emerald-600"></i>
-          <span>Cek Nomor Registrasi / NIP</span>
+          <span>Cek Status NIP</span>
         </button>
         <button id="mobile-btn-admin" onclick="handleAdminNavClick(); toggleMobileMenu()" class="w-full py-2.5 px-3 rounded-xl bg-slate-900 text-white text-center text-xs font-bold flex items-center justify-center space-x-2">
           <i class="fa-solid fa-user-shield text-emerald-400"></i>
@@ -145,69 +145,72 @@
     </div>
   </header>
 
-  <!-- ==================== DEDICATED ADMIN TASKBAR (TAMPILAN KHUSUS ADMIN) ==================== -->
+  <!-- ==================== DEDICATED ADMIN TASKBAR (MODE ADMIN) ==================== -->
   <header id="header-admin" class="sticky top-0 z-50 bg-slate-900 border-b border-slate-800 text-white shadow-xl hidden">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-      <div class="flex items-center justify-between h-14">
+      <div class="flex items-center justify-between h-16">
         
         <!-- Left Brand Logo & Admin Identity -->
         <div class="flex items-center space-x-2.5">
-          <div class="w-7 h-7 flex-shrink-0">
+          <div class="w-8 h-8 flex-shrink-0">
             <img src="assets/logo_kemenag.png" alt="Logo Kemenag" class="w-full h-full object-contain drop-shadow">
           </div>
           <div>
             <div class="flex items-center space-x-2">
-              <span class="text-sm font-black tracking-tight text-white">CetakID</span>
-              <span class="text-[9px] font-extrabold px-1.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 uppercase tracking-wider flex items-center space-x-1">
-                <i class="fa-solid fa-shield-halved text-[8px]"></i>
-                <span>ADMIN PANEL</span>
+              <span class="text-sm font-black tracking-tight text-white">CetakID Kemenag</span>
+              <span id="admin-header-role-badge" class="text-[9px] font-extrabold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 uppercase tracking-wider">
+                SUPERADMIN
               </span>
             </div>
-            <p class="text-[10px] text-slate-400 font-semibold leading-none">Kanwil Kemenag Prov. Kalsel</p>
+            <p id="admin-header-officer-name" class="text-[10px] text-slate-400 font-semibold leading-none mt-0.5">Administrator Utama</p>
           </div>
         </div>
 
         <!-- Center Admin Navigation Tabs -->
-        <nav class="hidden md:flex items-center p-1 rounded-xl bg-slate-800 border border-slate-700/80 shadow-inner space-x-1">
-          <button id="admin-top-tab-requests" onclick="switchAdminSubTab('requests')" class="px-3 py-1 rounded-lg font-bold text-xs transition flex items-center space-x-1.5 bg-emerald-700 text-white shadow-xs">
+        <nav class="hidden lg:flex items-center p-1 rounded-xl bg-slate-800 border border-slate-700/80 shadow-inner space-x-1">
+          <button id="admin-top-tab-requests" onclick="switchAdminSubTab('requests')" class="px-3 py-1.5 rounded-lg font-bold text-xs transition flex items-center space-x-1.5 bg-emerald-700 text-white shadow-xs">
             <i class="fa-solid fa-list-check text-[11px]"></i>
-            <span>Status Kartu</span>
+            <span>Manajemen Antrean</span>
             <span id="admin-top-badge-req-count" class="ml-1 px-1.5 py-0.2 rounded-full text-[9px] bg-emerald-950 text-emerald-200">0</span>
           </button>
 
-          <button id="admin-top-tab-units" onclick="switchAdminSubTab('units')" class="px-3 py-1 rounded-lg font-semibold text-xs text-slate-300 hover:text-white hover:bg-slate-700/60 transition flex items-center space-x-1.5">
+          <button id="admin-top-tab-template" onclick="switchAdminSubTab('template')" class="px-3 py-1.5 rounded-lg font-semibold text-xs text-slate-300 hover:text-white hover:bg-slate-700/60 transition flex items-center space-x-1.5">
+            <i class="fa-solid fa-id-card-clip text-[11px]"></i>
+            <span>Pengaturan Kartu & Pimpinan</span>
+          </button>
+
+          <button id="admin-top-tab-admins" onclick="switchAdminSubTab('admins')" class="px-3 py-1.5 rounded-lg font-semibold text-xs text-slate-300 hover:text-white hover:bg-slate-700/60 transition flex items-center space-x-1.5">
+            <i class="fa-solid fa-users-gear text-[11px]"></i>
+            <span>Kelola Petugas Admin</span>
+          </button>
+
+          <button id="admin-top-tab-units" onclick="switchAdminSubTab('units')" class="px-3 py-1.5 rounded-lg font-semibold text-xs text-slate-300 hover:text-white hover:bg-slate-700/60 transition flex items-center space-x-1.5">
             <i class="fa-solid fa-sitemap text-[11px]"></i>
             <span>Unit Kerja</span>
           </button>
-
-          <button id="admin-top-tab-template" onclick="switchAdminSubTab('template')" class="px-3 py-1 rounded-lg font-semibold text-xs text-slate-300 hover:text-white hover:bg-slate-700/60 transition flex items-center space-x-1.5">
-            <i class="fa-solid fa-signature text-[11px]"></i>
-            <span>Template Belakang</span>
-          </button>
         </nav>
 
-        <!-- Right Quick Actions: Sync Sheets, Lihat Web Pemohon, Logout -->
+        <!-- Right Quick Actions -->
         <div class="hidden sm:flex items-center space-x-2">
-          <!-- Google Sheets Admin Sync Button -->
           <button id="gas-admin-sync-indicator" type="button" onclick="syncWithBackend(false)" class="flex items-center space-x-1.5 px-2.5 py-1.5 text-xs font-semibold rounded-lg border border-slate-700 bg-slate-800/80 hover:bg-slate-800 text-slate-200 hover:text-white transition shadow-xs" title="Sinkronkan dengan Google Sheets">
             <span class="w-2 h-2 rounded-full bg-slate-400"></span>
             <i class="fa-solid fa-arrows-rotate text-emerald-400 text-xs"></i>
             <span id="gas-admin-sync-label">Sync Sheets</span>
           </button>
 
-          <button type="button" onclick="switchTab('dashboard')" class="flex items-center space-x-1.5 px-2.5 py-1.5 text-xs font-semibold rounded-lg border border-slate-700 hover:border-slate-500 bg-slate-800/80 hover:bg-slate-800 text-slate-200 hover:text-white transition shadow-xs" title="Lihat Tampilan Dashboard Pemohon">
+          <button type="button" onclick="switchTab('dashboard')" class="flex items-center space-x-1.5 px-2.5 py-1.5 text-xs font-semibold rounded-lg border border-slate-700 hover:border-slate-500 bg-slate-800/80 hover:bg-slate-800 text-slate-200 hover:text-white transition shadow-xs" title="Lihat Mode Pegawai">
             <i class="fa-solid fa-eye text-emerald-400 text-xs"></i>
-            <span>Web Pemohon</span>
+            <span>Mode Pegawai</span>
           </button>
 
           <button type="button" onclick="handleAdminLogout()" class="flex items-center space-x-1.5 px-3 py-1.5 text-xs font-bold rounded-lg bg-rose-600 hover:bg-rose-500 text-white transition shadow-xs" title="Keluar dari Panel Admin">
             <i class="fa-solid fa-right-from-bracket text-xs"></i>
-            <span>Keluar</span>
+            <span>Logout</span>
           </button>
         </div>
 
-        <!-- Mobile Admin Menu Toggle Button -->
-        <div class="flex md:hidden items-center space-x-2">
+        <!-- Mobile Admin Menu Toggle -->
+        <div class="flex lg:hidden items-center space-x-2">
           <button type="button" onclick="toggleAdminMobileMenu()" class="p-2 rounded-xl text-slate-300 hover:text-white hover:bg-slate-800">
             <i class="fa-solid fa-bars text-lg"></i>
           </button>
@@ -217,31 +220,31 @@
     </div>
 
     <!-- Mobile Admin Dropdown Menu -->
-    <div id="admin-mobile-menu" class="hidden md:hidden border-t border-slate-800 bg-slate-950 px-4 pt-2 pb-4 space-y-1">
+    <div id="admin-mobile-menu" class="hidden lg:hidden border-t border-slate-800 bg-slate-950 px-4 pt-2 pb-4 space-y-1">
       <button type="button" onclick="switchAdminSubTab('requests'); toggleAdminMobileMenu()" class="w-full flex items-center space-x-3 px-3 py-2.5 rounded-xl text-left text-sm font-semibold text-slate-200 hover:bg-slate-800">
         <i class="fa-solid fa-list-check w-5 text-emerald-400"></i>
-        <span>Permintaan & Status Kartu</span>
+        <span>Manajemen Antrean & Cetak</span>
+      </button>
+      <button type="button" onclick="switchAdminSubTab('template'); toggleAdminMobileMenu()" class="w-full flex items-center space-x-3 px-3 py-2.5 rounded-xl text-left text-sm font-semibold text-slate-200 hover:bg-slate-800">
+        <i class="fa-solid fa-id-card-clip w-5 text-emerald-400"></i>
+        <span>Pengaturan Kartu & Pimpinan</span>
+      </button>
+      <button type="button" onclick="switchAdminSubTab('admins'); toggleAdminMobileMenu()" class="w-full flex items-center space-x-3 px-3 py-2.5 rounded-xl text-left text-sm font-semibold text-slate-200 hover:bg-slate-800">
+        <i class="fa-solid fa-users-gear w-5 text-emerald-400"></i>
+        <span>Kelola Petugas Admin</span>
       </button>
       <button type="button" onclick="switchAdminSubTab('units'); toggleAdminMobileMenu()" class="w-full flex items-center space-x-3 px-3 py-2.5 rounded-xl text-left text-sm font-semibold text-slate-200 hover:bg-slate-800">
         <i class="fa-solid fa-sitemap w-5 text-emerald-400"></i>
-        <span>Kelola Dropdown Unit</span>
-      </button>
-      <button type="button" onclick="switchAdminSubTab('template'); toggleAdminMobileMenu()" class="w-full flex items-center space-x-3 px-3 py-2.5 rounded-xl text-left text-sm font-semibold text-slate-200 hover:bg-slate-800">
-        <i class="fa-solid fa-signature w-5 text-emerald-400"></i>
-        <span>Tampak Belakang (Kepala & NIP)</span>
+        <span>Kelola Unit Kerja</span>
       </button>
       <div class="pt-2 border-t border-slate-800 space-y-1.5">
-        <button type="button" onclick="openAdminAddEmployeeModal(); toggleAdminMobileMenu()" class="w-full py-2.5 px-3 rounded-xl bg-emerald-600 text-white text-center text-xs font-bold flex items-center justify-center space-x-2">
-          <i class="fa-solid fa-plus text-xs"></i>
-          <span>Tambah Pegawai Baru</span>
-        </button>
         <button type="button" onclick="switchTab('dashboard'); toggleAdminMobileMenu()" class="w-full py-2.5 px-3 rounded-xl border border-slate-700 text-slate-300 text-center text-xs font-bold flex items-center justify-center space-x-2">
           <i class="fa-solid fa-eye text-emerald-400 text-xs"></i>
-          <span>Lihat Web Pemohon</span>
+          <span>Lihat Mode Pegawai</span>
         </button>
         <button type="button" onclick="handleAdminLogout(); toggleAdminMobileMenu()" class="w-full py-2.5 px-3 rounded-xl bg-rose-950/40 border border-rose-800 text-rose-300 text-center text-xs font-bold flex items-center justify-center space-x-2">
           <i class="fa-solid fa-arrow-right-from-bracket text-xs"></i>
-          <span>Keluar dari Admin</span>
+          <span>Logout Admin</span>
         </button>
       </div>
     </div>
@@ -251,560 +254,430 @@
   <main class="flex-grow">
 
     <!-- ======================================================== -->
-    <!-- TAB 1: TATA CARA & PANDUAN PELAYANAN (BERANDA) -->
+    <!-- TAB 1: TATA CARA & PANDUAN PELAYANAN (MODE PEGAWAI) -->
     <!-- ======================================================== -->
     <section id="tab-tata-cara" class="tab-pane active py-8 sm:py-12">
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         
         <!-- Hero Section -->
         <div class="relative overflow-hidden rounded-3xl bg-gradient-to-br from-emerald-950 via-teal-900 to-slate-900 text-white p-8 sm:p-12 lg:p-16 shadow-2xl mb-12">
-          
           <div class="absolute -top-24 -right-24 w-96 h-96 bg-emerald-500/15 rounded-full blur-3xl pointer-events-none"></div>
           <div class="absolute -bottom-24 -left-24 w-96 h-96 bg-teal-500/15 rounded-full blur-3xl pointer-events-none"></div>
 
           <div class="relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center">
-            
             <div class="lg:col-span-7 space-y-6 text-center lg:text-left">
               <div class="inline-flex items-center space-x-2 px-3.5 py-1.5 rounded-full bg-emerald-500/20 border border-emerald-400/30 text-emerald-300 text-xs sm:text-sm font-semibold backdrop-blur-md">
-                <i class="fa-solid fa-shield-halved text-emerald-400"></i>
-                <span>Layanan Resmi Bagian Kepegawaian & Hukum</span>
+                <i class="fa-solid fa-id-card-clip text-emerald-400"></i>
+                <span>Sistem Layanan Mandiri & Pengelolaan ID Card Pegawai</span>
               </div>
 
               <h1 class="text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight leading-tight">
-                Tata Cara Permintaan <br class="hidden sm:inline">
-                <span class="bg-gradient-to-r from-emerald-300 via-teal-200 to-amber-300 bg-clip-text text-transparent">Pencetakan ID Card Pegawai</span>
+                Layanan Mandiri <br class="hidden sm:inline">
+                <span class="bg-gradient-to-r from-emerald-300 via-teal-200 to-amber-300 bg-clip-text text-transparent">CetakID Kemenag Kalsel</span>
               </h1>
 
               <p class="text-slate-200 text-sm sm:text-base lg:text-lg leading-relaxed max-w-2xl">
-                Selamat datang di portal pelayanan pencetakan ID Card resmi <strong>Kantor Wilayah Kementerian Agama Provinsi Kalimantan Selatan</strong>. Layanan ini dilengkapi sistem cerdas <strong>penghapus latar belakang foto otomatis</strong> yang langsung memposisikan foto setengah badan pegawai ke dalam template resmi.
+                Ajukan pencetakan kartu identitas pegawai (ID Card) secara mandiri tanpa perlu membuat akun login. Dilengkapi fitur <strong>Live Preview ID Card</strong> secara langsung dan pelacakan antrean transparan berbasis Nomor Tiket & NIP.
               </p>
 
               <!-- CTA Buttons -->
               <div class="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-3 sm:gap-4 pt-2">
                 <button onclick="switchTab('formulir')" class="w-full sm:w-auto px-6 py-3.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-sm sm:text-base shadow-lg shadow-emerald-600/30 transition transform hover:-translate-y-0.5 flex items-center justify-center space-x-2">
                   <i class="fa-solid fa-file-pen"></i>
-                  <span>Buka Formulir Pendaftaran</span>
+                  <span>Isi Formulir Pengajuan</span>
                 </button>
                 <button onclick="switchTab('dashboard')" class="w-full sm:w-auto px-6 py-3.5 rounded-xl bg-slate-800/80 hover:bg-slate-700/80 text-slate-200 border border-slate-700 font-semibold text-sm sm:text-base backdrop-blur-md transition flex items-center justify-center space-x-2">
-                  <i class="fa-solid fa-chart-line text-emerald-400"></i>
-                  <span>Pantau Status di Dashboard</span>
+                  <i class="fa-solid fa-table-list text-emerald-400"></i>
+                  <span>Pantau Dashboard Status</span>
                 </button>
               </div>
 
               <div class="grid grid-cols-3 gap-4 pt-4 border-t border-emerald-800/60 text-left">
                 <div>
-                  <p class="text-emerald-400 font-bold text-lg sm:text-xl">Setengah Badan</p>
-                  <p class="text-xs text-slate-300 font-medium">Format Foto Pegawai</p>
+                  <p class="text-emerald-400 font-bold text-lg sm:text-xl">Tanpa Login</p>
+                  <p class="text-xs text-slate-300 font-medium">Pengajuan Mandiri</p>
                 </div>
                 <div>
-                  <p class="text-amber-300 font-bold text-lg sm:text-xl">CR-80</p>
-                  <p class="text-xs text-slate-300 font-medium">Standar Fisik PVC</p>
+                  <p class="text-amber-300 font-bold text-lg sm:text-xl">18 Digit NIP</p>
+                  <p class="text-xs text-slate-300 font-medium">Validasi Otomatis</p>
                 </div>
                 <div>
-                  <p class="text-teal-300 font-bold text-lg sm:text-xl">Resmi</p>
-                  <p class="text-xs text-slate-300 font-medium">Tanda Tangan & Stempel</p>
+                  <p class="text-teal-300 font-bold text-lg sm:text-xl">CR-80 PVC</p>
+                  <p class="text-xs text-slate-300 font-medium">Standar Kartu Resmi</p>
                 </div>
               </div>
-
             </div>
 
             <!-- Card Illustration Hero -->
             <div class="lg:col-span-5 flex justify-center">
               <div class="relative transform rotate-1 hover:rotate-0 transition duration-500 ease-out">
-                
-                <div class="kemenag-card kemenag-card-front">
+                <div id="hero-card-front" class="kemenag-card kemenag-card-front">
                   <div class="card-hologram"></div>
-                  
-                  <!-- Half Body Photo Layer -->
-                  <div class="kemenag-photo-layer">
-                    <img id="hero-preview-photo" src="assets/sample_pegawai_setengah_badan.png" alt="Foto Pegawai Setengah Badan" class="kemenag-photo-img">
+                  <div id="hero-photo-layer" class="kemenag-photo-layer ratio-cutout">
+                    <img id="hero-preview-photo" src="assets/sample_pegawai_setengah_badan.png" alt="Foto Pegawai" class="kemenag-photo-img">
                   </div>
-
                   <div class="kemenag-wave-overlay"></div>
-
                   <div class="kemenag-front-text">
                     <h3 id="hero-preview-name" class="kemenag-front-name">RAHMAT HIDAYAT, S.Kom, M.M.</h3>
                     <p id="hero-preview-nip" class="kemenag-front-nip">NIP. 198804122014021003</p>
                   </div>
                 </div>
-
               </div>
             </div>
-
           </div>
         </div>
 
-        <!-- Section: Langkah-Langkah Tata Cara (Alur Utama) -->
-        <div class="mb-16">
-          <div class="text-center max-w-3xl mx-auto mb-12">
+        <!-- Langkah-Langkah Tata Cara -->
+        <div class="mb-12">
+          <div class="text-center max-w-3xl mx-auto mb-10">
             <span class="text-xs font-extrabold tracking-wider text-emerald-700 uppercase bg-emerald-50 px-3 py-1 rounded-full border border-emerald-200">
-              Alur Pelayanan
+              Panduan Layanan Mandiri
             </span>
             <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900 mt-3">
-              Tahapan Permintaan Pencetakan ID Card
+              Alur Pengajuan & Pencetakan ID Card Pegawai
             </h2>
             <p class="text-slate-600 text-sm sm:text-base mt-2">
-              Layanan ini terintegrasi langsung antara formulir data pegawai, pemrosesan foto, dan dashboard status pencetakan.
+              Ikuti tahapan berikut untuk mengajukan pembuatan ID Card dengan cepat dan akurat.
             </p>
           </div>
 
-          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
-            
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             <!-- Step 1 -->
-            <div class="bg-white rounded-2xl p-6 sm:p-7 border border-slate-200 shadow-sm hover:shadow-md transition group">
-              <div class="w-12 h-12 rounded-xl bg-emerald-100 text-emerald-700 font-black text-xl flex items-center justify-center mb-5 group-hover:scale-110 transition-transform">
-                1
-              </div>
-              <h3 class="text-lg font-bold text-slate-900 mb-2 flex items-center justify-between">
-                <span>Siapkan Pas Foto Setengah Badan</span>
-                <i class="fa-solid fa-camera text-slate-400 text-base"></i>
-              </h3>
-              <p class="text-slate-600 text-sm leading-relaxed mb-4">
-                Gunakan pakaian dinas resmi / jas / kemeja putih dengan Logo Kemenag. Foto diambil tampak setengah badan (dari pinggang ke atas). Latar belakang foto bebas/polos karena sistem otomatis menghapus background.
+            <div class="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm hover:shadow-md transition">
+              <div class="w-11 h-11 rounded-xl bg-emerald-100 text-emerald-700 font-black text-lg flex items-center justify-center mb-4">1</div>
+              <h3 class="text-base font-bold text-slate-900 mb-2">Siapkan Berkas Pasfoto Resmi</h3>
+              <p class="text-slate-600 text-xs sm:text-sm leading-relaxed mb-4">
+                Jika memilih <strong>Unggah Foto Mandiri</strong>, siapkan pasfoto berformat <code>.jpg</code>, <code>.jpeg</code>, atau <code>.png</code> dengan ukuran maksimal <strong>2 MB</strong>. Anda juga dapat memilih opsi <strong>Foto di Kantor</strong>.
               </p>
-              <div class="text-xs text-slate-500 border-t border-slate-100 pt-3 space-y-1.5">
-                <p class="flex items-center space-x-2 text-emerald-800 font-semibold">
-                  <i class="fa-solid fa-circle-check text-emerald-600"></i>
-                  <span>Format: JPG, JPEG, PNG (Maksimal 5MB)</span>
-                </p>
-                <p class="flex items-center space-x-2 text-slate-600">
-                  <i class="fa-solid fa-circle-info text-blue-500"></i>
-                  <span>Bagi yang belum punya foto, dapat foto di Bagian Umum</span>
-                </p>
+              <div class="text-xs text-emerald-800 font-semibold border-t border-slate-100 pt-3 flex items-center space-x-2">
+                <i class="fa-solid fa-circle-check text-emerald-600"></i>
+                <span>Rasio Proporsional 3:4 atau 1:1 (Maks 2 MB)</span>
               </div>
             </div>
 
             <!-- Step 2 -->
-            <div class="bg-white rounded-2xl p-6 sm:p-7 border border-slate-200 shadow-sm hover:shadow-md transition group">
-              <div class="w-12 h-12 rounded-xl bg-teal-100 text-teal-700 font-black text-xl flex items-center justify-center mb-5 group-hover:scale-110 transition-transform">
-                2
-              </div>
-              <h3 class="text-lg font-bold text-slate-900 mb-2 flex items-center justify-between">
-                <span>Isi Formulir Pegawai</span>
-                <i class="fa-solid fa-keyboard text-slate-400 text-base"></i>
-              </h3>
-              <p class="text-slate-600 text-sm leading-relaxed mb-4">
-                Buka menu <strong>Isi Formulir</strong>. Lengkapi Nama Lengkap dengan Gelar, NIP, pilih Unit Kerja / Bidang (14 Bidang resmi Kanwil), dan Jabatan.
+            <div class="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm hover:shadow-md transition">
+              <div class="w-11 h-11 rounded-xl bg-teal-100 text-teal-700 font-black text-lg flex items-center justify-center mb-4">2</div>
+              <h3 class="text-base font-bold text-slate-900 mb-2">Lengkapi Biodata & NIP 18 Digit</h3>
+              <p class="text-slate-600 text-xs sm:text-sm leading-relaxed mb-4">
+                Isi Nama Lengkap beserta gelar, NIP tepat <strong>18 digit angka numerik</strong>, Unit Kerja/Bidang, dan Jabatan. Periksa hasilnya secara langsung pada <em>Live Preview ID Card</em>.
               </p>
-              <div class="text-xs text-slate-500 border-t border-slate-100 pt-3 space-y-1.5">
-                <p class="flex items-center space-x-2 text-emerald-800 font-semibold">
-                  <i class="fa-solid fa-circle-check text-emerald-600"></i>
-                  <span>Sesuai format resmi Google Form Kemenag Kalsel</span>
-                </p>
-                <p class="flex items-center space-x-2 text-slate-600">
-                  <i class="fa-solid fa-circle-check text-emerald-600"></i>
-                  <span>Pratinjau ID Card langsung ter-render di sebelah kanan</span>
-                </p>
+              <div class="text-xs text-emerald-800 font-semibold border-t border-slate-100 pt-3 flex items-center space-x-2">
+                <i class="fa-solid fa-circle-check text-emerald-600"></i>
+                <span>Validasi Otomatis Regex 18 Digit NIP</span>
               </div>
             </div>
 
             <!-- Step 3 -->
-            <div class="bg-white rounded-2xl p-6 sm:p-7 border border-slate-200 shadow-sm hover:shadow-md transition group">
-              <div class="w-12 h-12 rounded-xl bg-sky-100 text-sky-700 font-black text-xl flex items-center justify-center mb-5 group-hover:scale-110 transition-transform">
-                3
-              </div>
-              <h3 class="text-lg font-bold text-slate-900 mb-2 flex items-center justify-between">
-                <span>Hapus Background Otomatis</span>
-                <i class="fa-solid fa-wand-magic-sparkles text-slate-400 text-base"></i>
-              </h3>
-              <p class="text-slate-600 text-sm leading-relaxed mb-4">
-                Sistem secara otomatis menghapus latar belakang foto yang Anda unggah secara instan, sehingga foto Anda langsung membaur sempurna dengan gedung Kanwil Kemenag Kalsel.
+            <div class="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm hover:shadow-md transition">
+              <div class="w-11 h-11 rounded-xl bg-amber-100 text-amber-700 font-black text-lg flex items-center justify-center mb-4">3</div>
+              <h3 class="text-base font-bold text-slate-900 mb-2">Simpan Nomor Tiket & Pantau Status</h3>
+              <p class="text-slate-600 text-xs sm:text-sm leading-relaxed mb-4">
+                Sistem menerbitkan Nomor Tiket unik berformat <code>KMN-2026-XXXX</code>. Pantau status verifikasi dan pencetakan kartu Anda melalui menu <strong>Dashboard Status</strong>.
               </p>
-              <div class="text-xs text-slate-500 border-t border-slate-100 pt-3 space-y-1.5">
-                <p class="flex items-center space-x-2 text-emerald-800 font-semibold">
-                  <i class="fa-solid fa-sliders text-sky-600"></i>
-                  <span>Tersedia slider toleransi dan deteksi warna background</span>
-                </p>
-                <p class="flex items-center space-x-2 text-slate-600">
-                  <i class="fa-solid fa-arrows-up-down text-sky-600"></i>
-                  <span>Bisa atur posisi & ukuran foto sesuai kenyamanan</span>
-                </p>
+              <div class="text-xs text-emerald-800 font-semibold border-t border-slate-100 pt-3 flex items-center space-x-2">
+                <i class="fa-solid fa-circle-check text-emerald-600"></i>
+                <span>Pelacakan Real-Time Tanpa Login</span>
               </div>
             </div>
-
-            <!-- Step 4 -->
-            <div class="bg-white rounded-2xl p-6 sm:p-7 border border-slate-200 shadow-sm hover:shadow-md transition group">
-              <div class="w-12 h-12 rounded-xl bg-amber-100 text-amber-700 font-black text-xl flex items-center justify-center mb-5 group-hover:scale-110 transition-transform">
-                4
-              </div>
-              <h3 class="text-lg font-bold text-slate-900 mb-2 flex items-center justify-between">
-                <span>Pantau di Dashboard Status</span>
-                <i class="fa-solid fa-bars-progress text-slate-400 text-base"></i>
-              </h3>
-              <p class="text-slate-600 text-sm leading-relaxed mb-4">
-                Setelah formulir dikirim, nomor registrasi (misal: <code class="font-mono text-emerald-700 bg-emerald-50 px-1 py-0.5 rounded font-bold">KMN-2026-XXXX</code>) akan diterbitkan dan data masuk ke Dashboard untuk dicek:
-              </p>
-              <div class="text-xs space-y-1.5 border-t border-slate-100 pt-3">
-                <div class="flex items-center space-x-2">
-                  <span class="w-2.5 h-2.5 rounded-full bg-amber-500"></span>
-                  <span class="font-bold text-slate-800">Menunggu Verifikasi:</span>
-                  <span class="text-slate-500">Berkas antrean awal pegawai</span>
-                </div>
-                <div class="flex items-center space-x-2">
-                  <span class="w-2.5 h-2.5 rounded-full bg-blue-500"></span>
-                  <span class="font-bold text-slate-800">Sedang Dicetak:</span>
-                  <span class="text-slate-500">Proses cetak mesin ID Card PVC</span>
-                </div>
-                <div class="flex items-center space-x-2">
-                  <span class="w-2.5 h-2.5 rounded-full bg-emerald-600"></span>
-                  <span class="font-bold text-slate-800">Selesai:</span>
-                  <span class="text-slate-500">ID Card siap diambil di Bagian Umum</span>
-                </div>
-              </div>
-            </div>
-
-            <!-- Step 5 -->
-            <div class="bg-white rounded-2xl p-6 sm:p-7 border border-slate-200 shadow-sm hover:shadow-md transition group">
-              <div class="w-12 h-12 rounded-xl bg-emerald-100 text-emerald-700 font-black text-xl flex items-center justify-center mb-5 group-hover:scale-110 transition-transform">
-                5
-              </div>
-              <h3 class="text-lg font-bold text-slate-900 mb-2 flex items-center justify-between">
-                <span>Pengambilan ID Card Fisik</span>
-                <i class="fa-solid fa-id-card text-slate-400 text-base"></i>
-              </h3>
-              <p class="text-slate-600 text-sm leading-relaxed mb-4">
-                Ketika status di dashboard telah menunjukkan <strong>Selesai</strong>, pegawai dapat langsung mengambil ID Card fisik yang telah dicetak di Bagian Umum dengan menunjukkan nomor tiket atau NIP.
-              </p>
-              <div class="text-xs text-slate-500 border-t border-slate-100 pt-3 space-y-1.5">
-                <p class="flex items-center space-x-2 text-emerald-800 font-semibold">
-                  <i class="fa-solid fa-stamp text-emerald-600"></i>
-                  <span>Lengkap dengan stempel resmi Kanwil Kemenag Kalsel</span>
-                </p>
-                <p class="flex items-center space-x-2 text-slate-600">
-                  <i class="fa-solid fa-pen-nib text-emerald-600"></i>
-                  <span>Tanda tangan Kepala Kanwil Kemenag Kalsel</span>
-                </p>
-              </div>
-            </div>
-
-            <!-- Call to action card -->
-            <div class="bg-gradient-to-br from-emerald-800 to-teal-900 rounded-2xl p-6 sm:p-7 text-white shadow-lg flex flex-col justify-between">
-              <div>
-                <div class="w-12 h-12 rounded-xl bg-white/10 flex items-center justify-center mb-5 text-xl">
-                  <i class="fa-solid fa-id-badge"></i>
-                </div>
-                <h3 class="text-lg font-bold mb-2">Ingin Mengajukan ID Card?</h3>
-                <p class="text-emerald-100 text-sm leading-relaxed">
-                  Isi formulir online sekarang, sistem akan otomatis merapikan foto Anda agar siap dicetak sesuai standar resmi.
-                </p>
-              </div>
-              <div class="pt-6">
-                <button onclick="switchTab('formulir')" class="w-full py-3 px-4 rounded-xl bg-white text-emerald-800 hover:bg-emerald-50 font-bold text-sm shadow transition flex items-center justify-center space-x-2">
-                  <span>Isi Formulir Sekarang</span>
-                  <i class="fa-solid fa-arrow-right"></i>
-                </button>
-              </div>
-            </div>
-
           </div>
         </div>
 
       </div>
     </section>
 
-
     <!-- ======================================================== -->
-    <!-- TAB 2: FORMULIR PERMINTAAN ID CARD (PERSIS GOOGLE FORM) -->
+    <!-- TAB 2: FORMULIR PENGAJUAN & VALIDASI INPUT (MODE PEGAWAI) -->
     <!-- ======================================================== -->
     <section id="tab-formulir" class="tab-pane py-8 sm:py-12">
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         
-        <!-- Header Google Form Style Banner -->
+        <!-- Header Form Banner -->
         <div class="rounded-3xl overflow-hidden border border-slate-200 shadow-md bg-white mb-8">
-          <div class="h-4 bg-gradient-to-r from-emerald-700 via-teal-600 to-amber-500"></div>
+          <div class="h-3.5 bg-gradient-to-r from-emerald-700 via-teal-600 to-amber-500"></div>
           <div class="p-6 sm:p-8">
             <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-4 border-b border-slate-100">
               <div class="flex items-center space-x-4">
-                <img src="assets/logo_kemenag.png" alt="Logo Kemenag" class="w-14 h-14 object-contain">
+                <img src="assets/logo_kemenag.png" alt="Logo Kemenag" class="w-12 h-12 object-contain">
                 <div>
                   <h2 class="text-xl sm:text-2xl font-black text-slate-900">
-                    Formulir Permintaan Pencetakan ID Card Pegawai
+                    Formulir Pengajuan Pencetakan ID Card Pegawai
                   </h2>
                   <p class="text-xs sm:text-sm font-bold text-emerald-700">
-                    Kantor Wilayah Kementerian Agama Provinsi Kalimantan Selatan
+                    Kanwil Kementerian Agama Provinsi Kalimantan Selatan
                   </p>
                 </div>
               </div>
-              <div class="flex items-center space-x-2">
-                <button type="button" onclick="resetIdCardForm()" class="px-3.5 py-2 text-xs font-semibold rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-100 transition flex items-center space-x-1.5" title="Reset Form">
-                  <i class="fa-solid fa-arrow-rotate-left text-xs"></i>
-                  <span>Reset Form</span>
-                </button>
-              </div>
+              <button type="button" onclick="resetIdCardForm()" class="px-3.5 py-2 text-xs font-semibold rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-100 transition flex items-center space-x-1.5">
+                <i class="fa-solid fa-arrow-rotate-left text-xs"></i>
+                <span>Reset Formulir</span>
+              </button>
             </div>
 
-            <div class="mt-4 p-4 rounded-2xl bg-amber-50/70 border border-amber-200 text-xs sm:text-sm text-amber-900 flex items-start space-x-3">
-              <i class="fa-solid fa-circle-info text-amber-600 text-base mt-0.5 flex-shrink-0"></i>
-              <div>
-                <p class="font-bold">Informasi ID Card:</p>
-                <p class="text-slate-600 mt-0.5">
-                  Silakan lengkapi data berikut dengan benar. Pastikan seluruh informasi sesuai dengan identitas resmi. ID Card akan dicetak berdasarkan data yang Anda isi di bawah ini.
-                </p>
+            <!-- Validation Error Box (Shown if any validation fails) -->
+            <div id="form-validation-alert" class="hidden mt-4 p-4 rounded-2xl bg-rose-50 border border-rose-200 text-xs sm:text-sm text-rose-900 flex items-start space-x-3">
+              <i class="fa-solid fa-triangle-exclamation text-rose-600 text-base mt-0.5 flex-shrink-0"></i>
+              <div class="flex-1">
+                <p class="font-bold">Perhatian Validasi Input:</p>
+                <p id="form-validation-alert-text" class="text-rose-700 mt-0.5"></p>
               </div>
             </div>
           </div>
         </div>
 
-        <!-- Two Column Layout: Form vs Live ID Card Preview -->
+        <!-- Two Column Layout: Form Inputs vs Live Preview ID Card -->
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
           
           <!-- LEFT COLUMN: FORM INPUTS -->
           <div class="lg:col-span-7 space-y-6">
-            <form id="id-card-form" onsubmit="handleFormSubmit(event)" class="space-y-6">
+            <form id="id-card-form" onsubmit="handleFormSubmit(event)" novalidate class="space-y-6">
               
-              <!-- SECTION 1: DATA IDENTITAS PEGAWAI -->
+              <!-- BAGIAN 1: BIODATA PEGAWAI -->
               <div class="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200 shadow-sm space-y-5">
                 <div class="flex items-center justify-between border-b border-slate-100 pb-3">
                   <h3 class="text-base font-bold text-slate-900 flex items-center space-x-2">
                     <span class="w-6 h-6 rounded-full bg-emerald-100 text-emerald-800 text-xs font-bold flex items-center justify-center">1</span>
-                    <span>Informasi Data Diri Pegawai</span>
+                    <span>Biodata Resmi Pegawai</span>
                   </h3>
                   <span class="text-[11px] text-rose-500 font-semibold">* Wajib Diisi</span>
                 </div>
 
-                <!-- Field 1: Nama Lengkap dengan Gelar -->
+                <!-- Kolom 1: Nama Lengkap & Gelar -->
                 <div>
                   <div class="flex items-center justify-between mb-1.5">
-                    <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider">
-                      Nama Lengkap dengan Gelar <span class="text-rose-500">*</span>
+                    <label for="form-name" class="block text-xs font-bold text-slate-700 uppercase tracking-wider">
+                      Nama Lengkap & Gelar <span class="text-rose-500">*</span>
                     </label>
-                    <span id="name-validation-badge" class="text-[10px] font-bold text-slate-400">Gelar depan/belakang diperbolehkan</span>
+                    <span id="name-validation-badge" class="text-[10px] font-bold text-slate-400">Wajib diisi</span>
                   </div>
                   <input type="text" id="form-name" required placeholder="Contoh: Rahmat Hidayat, S.Kom, M.M." oninput="validateNameInput(this)" class="w-full px-4 py-3 rounded-xl border border-slate-300 focus:ring-2 focus:ring-emerald-600 focus:border-emerald-600 text-sm font-semibold transition">
-                  <p class="text-[11px] text-slate-400 mt-1">Nama ini akan tercetak pada bagian depan & belakang ID Card.</p>
                 </div>
 
-                <!-- Field 2: NIP (Numeric Only Validation) -->
+                <!-- Kolom 2: NIP (Wajib 18 Digit Numerik /^[0-9]{18}$/) -->
                 <div>
                   <div class="flex items-center justify-between mb-1.5">
-                    <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider">
+                    <label for="form-nip" class="block text-xs font-bold text-slate-700 uppercase tracking-wider">
                       NIP (Nomor Induk Pegawai) <span class="text-rose-500">*</span>
                     </label>
-                    <span id="nip-validation-badge" class="text-[10px] font-bold px-2 py-0.5 rounded-md bg-slate-100 text-slate-600 font-mono">Hanya Angka (18 Digit)</span>
+                    <span id="nip-validation-badge" class="text-[10px] font-bold px-2 py-0.5 rounded-md bg-slate-100 text-slate-600 font-mono">0/18 Digit</span>
                   </div>
                   <div class="relative">
-                    <input type="text" id="form-nip" required maxlength="18" inputmode="numeric" placeholder="Contoh: 198804122014021003" oninput="validateNipInput(this)" onkeypress="return isNumberKey(event)" class="w-full px-4 py-3 rounded-xl border border-slate-300 focus:ring-2 focus:ring-emerald-600 focus:border-emerald-600 text-sm font-mono font-bold tracking-wider transition">
+                    <input type="text" id="form-nip" required maxlength="18" inputmode="numeric" placeholder="Contoh: 198804122014021003" oninput="validateNipInput(this)" class="w-full px-4 py-3 rounded-xl border border-slate-300 focus:ring-2 focus:ring-emerald-600 focus:border-emerald-600 text-sm font-mono font-bold tracking-wider transition">
                     <div id="nip-icon-status" class="absolute right-3.5 top-3.5 text-slate-400">
                       <i class="fa-solid fa-hashtag"></i>
                     </div>
                   </div>
-                  <p id="nip-validation-feedback" class="text-[11px] font-semibold mt-1 text-slate-400">Format resmi NIP PNS 18 digit angka tanpa huruf atau tanda baca.</p>
+                  <p id="nip-validation-feedback" class="text-[11px] font-semibold mt-1 text-slate-500">
+                    Wajib berupa angka numerik tepat 18 digit tanpa spasi atau karakter selain angka.
+                  </p>
                 </div>
 
-                <!-- Field 3: Unit Kerja / Bidang (14 Options) -->
+                <!-- Kolom 3: Unit Kerja / Bidang -->
                 <div>
-                  <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                  <label for="form-bidang" class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
                     Unit Kerja / Bidang <span class="text-rose-500">*</span>
                   </label>
                   <select id="form-bidang" required onchange="updateLivePreview()" class="w-full px-4 py-3 rounded-xl border border-slate-300 focus:ring-2 focus:ring-emerald-600 focus:border-emerald-600 text-sm font-medium transition">
-                    <option value="Kanwil Kemenag Kalsel">Kanwil Kemenag Kalsel</option>
-                    <option value="Bidang Pendidikan Madrasah">1. Bidang Pendidikan Madrasah</option>
-                    <option value="Bidang Pendidikan Agama dan Keagamaan Islam">2. Bidang Pendidikan Agama dan Keagamaan Islam</option>
-                    <option value="Bidang Pelayanan Haji & Umrah">3. Bidang Pelayanan Haji & Umrah</option>
-                    <option value="Bidang Urusan Agama Islam">4. Bidang Urusan Agama Islam</option>
-                    <option value="Bidang Penerangan Agama Islam">5. Bidang Penerangan Agama Islam</option>
-                    <option value="Bimbingan Masyarakat Kristen">6. Bimbingan Masyarakat Kristen</option>
-                    <option value="Bimbingan Masyarakat Katolik">7. Bimbingan Masyarakat Katolik</option>
-                    <option value="Bimbingan Masyarakat Hindu">8. Bimbingan Masyarakat Hindu</option>
-                    <option value="Bimbingan Masyarakat Buddha">9. Bimbingan Masyarakat Buddha</option>
-                    <option value="Sub Bagian Perencanaan, Data & Informasi" selected>10. Sub Bagian Perencanaan, Data & Informasi</option>
-                    <option value="Sub Bagian Keuangan dan Barang Milik Negara">11. Sub Bagian Keuangan dan Barang Milik Negara</option>
-                    <option value="Sub Bagian Kepegawaian & Hukum">12. Sub Bagian Kepegawaian & Hukum</option>
-                    <option value="Sub Bagian Organisasi, Tata Laksana & KUB">13. Sub Bagian Organisasi, Tata Laksana & KUB</option>
-                    <option value="Sub Bagian Umum & Humas">14. Sub Bagian Umum & Humas</option>
+                    <!-- Diisi otomatis oleh populateUnitDropdowns() -->
                   </select>
                 </div>
 
-                <!-- Field 4: Jabatan -->
+                <!-- Kolom 4: Jabatan -->
                 <div>
-                  <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                  <label for="form-jabatan" class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
                     Jabatan <span class="text-rose-500">*</span>
                   </label>
                   <input type="text" id="form-jabatan" required placeholder="Contoh: Pranata Komputer Ahli Muda" oninput="updateLivePreview()" class="w-full px-4 py-3 rounded-xl border border-slate-300 focus:ring-2 focus:ring-emerald-600 focus:border-emerald-600 text-sm font-semibold transition">
                 </div>
 
-                <!-- Field 5: Tanggal Pengajuan -->
+                <!-- Kolom 5: Nomor HP / WhatsApp Pegawai (Wajib Diisi & Rahasia / Khusus Admin) -->
                 <div>
-                  <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
-                    Tanggal Pengajuan <span class="text-rose-500">*</span>
+                  <div class="flex items-center justify-between mb-1.5">
+                    <label for="form-phone" class="block text-xs font-bold text-slate-700 uppercase tracking-wider">
+                      Nomor HP / WhatsApp Pegawai <span class="text-rose-500">*</span>
+                    </label>
+                    <span class="text-[10px] font-bold px-2 py-0.5 rounded-md bg-emerald-50 text-emerald-700 border border-emerald-200 flex items-center space-x-1">
+                      <i class="fa-solid fa-lock text-[9px]"></i>
+                      <span>Privasi Terlindungi (Khusus Admin)</span>
+                    </span>
+                  </div>
+                  <div class="relative">
+                    <i class="fa-brands fa-whatsapp absolute left-3.5 top-3.5 text-emerald-600 text-base"></i>
+                    <input type="tel" id="form-phone" required inputmode="numeric" maxlength="16" placeholder="Contoh: 081234567890" oninput="validatePhoneInput(this)" class="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-300 focus:ring-2 focus:ring-emerald-600 focus:border-emerald-600 text-sm font-mono font-bold tracking-wide transition">
+                  </div>
+                  <p class="text-[11px] text-slate-500 mt-1">
+                    Digunakan oleh petugas admin untuk konfirmasi berkas/pengambilan kartu. <strong>Tidak ditampilkan</strong> di Dashboard Status publik.
+                  </p>
+                </div>
+
+                <!-- Kolom 6: Tanggal Pengajuan Otomatis (YYYY-MM-DD) -->
+                <div>
+                  <label for="form-date" class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                    Tanggal Pengajuan Otomatis <span class="text-rose-500">*</span>
                   </label>
                   <input type="date" id="form-date" required onchange="updateLivePreview()" class="w-full px-4 py-3 rounded-xl border border-slate-300 focus:ring-2 focus:ring-emerald-600 focus:border-emerald-600 text-sm font-semibold transition">
                 </div>
 
-                <!-- Field 6: Ketersediaan File Foto -->
+                <!-- Kolom 7: Opsi Foto (Unggah Foto Mandiri vs Opsi Foto di Kantor) -->
                 <div class="pt-2">
                   <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">
-                    Apakah Anda sudah memiliki file foto/desain yang siap unggah? <span class="text-rose-500">*</span>
+                    Opsi Pasfoto Pegawai <span class="text-rose-500">*</span>
                   </label>
-                  <div class="space-y-2">
-                    <label class="flex items-center space-x-3 p-3 rounded-xl border border-emerald-300 bg-emerald-50/50 cursor-pointer">
-                      <input type="radio" name="photo_ready" value="ready" checked onchange="togglePhotoUploadSection(true); updateLivePreview()" class="text-emerald-700 focus:ring-emerald-600">
-                      <span class="text-sm font-semibold text-slate-800">Ya, saya ingin mengunggah file sekarang.</span>
+                  <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <label id="label-photo-ready" class="flex items-start space-x-3 p-3.5 rounded-xl border border-emerald-300 bg-emerald-50/50 cursor-pointer transition">
+                      <input type="radio" id="radio-photo-ready" name="photo_ready" value="ready" checked onchange="togglePhotoUploadSection(true); updateLivePreview()" class="mt-0.5 text-emerald-700 focus:ring-emerald-600">
+                      <div>
+                        <span class="block text-xs sm:text-sm font-bold text-slate-800">Unggah Foto Mandiri</span>
+                        <span class="block text-[11px] text-slate-500">Format .jpg, .jpeg, .png (Maks 2 MB)</span>
+                      </div>
                     </label>
-                    <label class="flex items-center space-x-3 p-3 rounded-xl border border-slate-200 hover:bg-slate-50 cursor-pointer">
-                      <input type="radio" name="photo_ready" value="not_ready" onchange="togglePhotoUploadSection(false); updateLivePreview()" class="text-emerald-700 focus:ring-emerald-600">
-                      <span class="text-sm font-semibold text-slate-800">Belum, saya akan melakukan pengambilan foto di bagian umum.</span>
+                    <label id="label-photo-office" class="flex items-start space-x-3 p-3.5 rounded-xl border border-slate-200 hover:bg-slate-50 cursor-pointer transition">
+                      <input type="radio" id="radio-photo-office" name="photo_ready" value="not_ready" onchange="togglePhotoUploadSection(false); updateLivePreview()" class="mt-0.5 text-emerald-700 focus:ring-emerald-600">
+                      <div>
+                        <span class="block text-xs sm:text-sm font-bold text-slate-800">Opsi Foto di Kantor</span>
+                        <span class="block text-[11px] text-slate-500">Foto langsung di kantor (tanpa unggah berkas)</span>
+                      </div>
                     </label>
                   </div>
                 </div>
 
               </div>
 
-              <!-- SECTION 2: UPLOAD PAS FOTO SETENGAH BADAN & PENGHAPUS BACKGROUND -->
-              <div id="section-photo-upload" class="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200 shadow-sm space-y-6">
-                
-                <div class="border-b border-slate-100 pb-3">
-                  <div class="flex items-center justify-between">
+              <!-- BAGIAN 2: UNGGAH PASFOTO MANDIRI & PENGATURAN POSISI/SKALA FOTO -->
+              <div id="section-photo-upload" class="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200 shadow-sm space-y-5">
+                <div class="border-b border-slate-100 pb-3 flex items-center justify-between">
+                  <div>
                     <h3 class="text-base font-bold text-slate-900 flex items-center space-x-2">
                       <span class="w-6 h-6 rounded-full bg-emerald-100 text-emerald-800 text-xs font-bold flex items-center justify-center">2</span>
-                      <span>Upload Pas Foto Setengah Badan</span>
+                      <span>Pasfoto &amp; Pengaturan Posisi Foto</span>
                     </h3>
-                    <span class="text-xs px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 font-bold">Auto Remover</span>
-                  </div>
-                  <p class="text-xs text-slate-500 mt-1">
-                    Foto setengah badan (dari pinggang ke atas) berpakaian dinas resmi. Sistem otomatis menghapus background menjadi transparan!
-                  </p>
-                </div>
-
-                <!-- Drag & drop upload zone -->
-                <div id="drop-zone" class="border-2 border-dashed border-emerald-400 hover:border-emerald-600 rounded-2xl p-6 text-center cursor-pointer bg-emerald-50/20 hover:bg-emerald-50/40 transition group">
-                  <input type="file" id="form-photo-input" accept="image/*" class="hidden" onchange="handlePhotoUpload(event)">
-                  
-                  <div class="flex flex-col items-center justify-center space-y-2">
-                    <div class="w-14 h-14 rounded-2xl bg-emerald-100 text-emerald-700 flex items-center justify-center text-2xl group-hover:scale-110 transition-transform">
-                      <i class="fa-solid fa-cloud-arrow-up"></i>
-                    </div>
-                    <div class="text-sm font-bold text-slate-800">
-                      Klik atau Tarik Foto Setengah Badan ke Sini
-                    </div>
-                    <p class="text-xs text-slate-500">
-                      Format didukung: PNG, JPG, JPEG, WEBP (Maksimal 5MB)
+                    <p class="text-xs text-slate-500 mt-1">
+                      Format wajib <strong>.jpg, .jpeg, atau .png</strong> (maks. <strong>2 MB</strong>). Latar belakang foto otomatis dihapus menjadi transparan.
                     </p>
                   </div>
+                  <span id="photo-upload-status-badge" class="text-[10px] px-2.5 py-1 rounded-full bg-amber-100 text-amber-800 font-bold">
+                    Foto Sampel Default
+                  </span>
                 </div>
 
-                <!-- SMART BACKGROUND REMOVER CONTROLS -->
-                <div class="bg-slate-50 border border-slate-200 rounded-2xl p-4 sm:p-5 space-y-4">
-                  <div class="flex items-center justify-between pb-3 border-b border-slate-200">
-                    <div class="flex items-center space-x-2">
-                      <i class="fa-solid fa-wand-magic-sparkles text-emerald-600 text-base"></i>
-                      <h4 class="text-xs font-bold uppercase tracking-wider text-slate-800">Pengaturan Hapus Background (Transparan)</h4>
+                <!-- Wrapper Zona Unggah (Dinonaktifkan saat memilih Foto di Kantor, namun kontrol skala/geser tetap aktif) -->
+                <div id="drop-zone-wrapper" class="space-y-4">
+                  <!-- Drag & Drop Zone -->
+                  <div id="drop-zone" class="border-2 border-dashed border-emerald-400 hover:border-emerald-600 rounded-2xl p-6 text-center cursor-pointer bg-emerald-50/20 hover:bg-emerald-50/40 transition group">
+                    <input type="file" id="form-photo-input" accept=".jpg,.jpeg,.png,image/jpeg,image/png" class="hidden" onchange="handlePhotoUpload(event)">
+                    <div class="flex flex-col items-center justify-center space-y-2">
+                      <div class="w-12 h-12 rounded-2xl bg-emerald-100 text-emerald-700 flex items-center justify-center text-xl group-hover:scale-110 transition-transform">
+                        <i class="fa-solid fa-cloud-arrow-up"></i>
+                      </div>
+                      <div id="drop-zone-filename" class="text-sm font-bold text-slate-800">
+                        Klik atau Tarik Berkas Pasfoto ke Sini
+                      </div>
+                      <p class="text-xs text-slate-500">
+                        Hanya mendukung <strong>.JPG, .JPEG, .PNG</strong> &bull; Maksimal <strong>2 MB</strong> (2.097.152 bytes)
+                      </p>
                     </div>
-                    <label class="relative inline-flex items-center cursor-pointer">
-                      <input type="checkbox" id="toggle-bg-removal" checked onchange="toggleBackgroundRemoval()" class="sr-only peer">
-                      <div class="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-600"></div>
-                      <span class="ml-2 text-xs font-bold text-emerald-800">Aktif</span>
+                  </div>
+
+                  <!-- Pesan Peringatan Validasi Foto -->
+                  <div id="photo-validation-error" class="hidden p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs font-semibold flex items-center space-x-2">
+                    <i class="fa-solid fa-circle-exclamation text-rose-600"></i>
+                    <span id="photo-validation-error-text"></span>
+                  </div>
+                </div>
+
+                <!-- Pengaturan Hapus Background Otomatis & Kontrol Posisi/Skala Foto -->
+                <div class="bg-slate-50 border border-slate-200 rounded-2xl p-4 space-y-4">
+                  <div class="flex items-center justify-between">
+                    <label class="flex items-center justify-between w-full p-2.5 rounded-xl bg-white border border-slate-200 cursor-pointer">
+                      <span class="text-xs font-bold text-slate-700 flex items-center space-x-2">
+                        <i class="fa-solid fa-wand-magic-sparkles text-emerald-600"></i>
+                        <span>Hapus Background Otomatis (Transparan Menyatu dengan Kartu)</span>
+                      </span>
+                      <input type="checkbox" id="toggle-bg-removal" checked onchange="toggleBackgroundRemoval()" class="rounded text-emerald-600 focus:ring-emerald-500 w-4 h-4">
                     </label>
                   </div>
 
-                  <!-- Color Selection Mode -->
-                  <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div>
-                      <label class="block text-xs font-bold text-slate-600 mb-1">
-                        Mode Deteksi Warna Background:
-                      </label>
-                      <select id="bg-color-mode" onchange="runSmartBackgroundRemoval()" class="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs font-semibold focus:ring-1 focus:ring-emerald-600">
-                        <option value="auto">1. Deteksi Otomatis (Warna Sudut)</option>
-                        <option value="blue">2. Pas Foto Latar Biru</option>
-                        <option value="red">3. Pas Foto Latar Merah</option>
-                        <option value="white">4. Pas Foto Latar Putih / Abu-abu</option>
-                        <option value="custom">5. Pilih Warna Kustom</option>
-                      </select>
-                    </div>
-
-                    <div id="custom-color-container" class="hidden">
-                      <label class="block text-xs font-bold text-slate-600 mb-1">
-                        Pilih Warna Background:
-                      </label>
-                      <div class="flex items-center space-x-2">
-                        <input type="color" id="bg-custom-color" value="#1e40af" onchange="runSmartBackgroundRemoval()" class="h-9 w-12 rounded-lg border border-slate-300 cursor-pointer p-0.5">
-                        <span class="text-xs font-mono text-slate-600 font-bold" id="custom-color-hex">#1e40af</span>
+                  <!-- Kontrol Hapus Background (Aktif secara default) -->
+                  <div id="bg-remover-controls" class="pt-3 border-t border-slate-200 space-y-3">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <div>
+                        <label class="block text-[11px] font-bold text-slate-600 mb-1">Warna Latar Pasfoto:</label>
+                        <select id="bg-color-mode" onchange="runSmartBackgroundRemoval()" class="w-full px-3 py-1.5 rounded-lg border border-slate-300 text-xs font-semibold bg-white">
+                          <option value="auto">Deteksi Otomatis (Putih / Polos / Sudut Foto)</option>
+                          <option value="white">Latar Putih / Abu-abu Polos</option>
+                          <option value="blue">Latar Biru Pasfoto</option>
+                          <option value="red">Latar Merah Pasfoto</option>
+                          <option value="custom">Warna Kustom</option>
+                        </select>
+                      </div>
+                      <div id="custom-color-container" class="hidden">
+                        <label class="block text-[11px] font-bold text-slate-600 mb-1">Pilih Warna:</label>
+                        <div class="flex items-center space-x-2">
+                          <input type="color" id="bg-custom-color" value="#ffffff" onchange="runSmartBackgroundRemoval()" class="h-8 w-10 rounded border border-slate-300 cursor-pointer">
+                          <span class="text-xs font-mono font-bold" id="custom-color-hex">#ffffff</span>
+                        </div>
                       </div>
                     </div>
-                  </div>
-
-                  <!-- Tolerance Slider -->
-                  <div>
-                    <div class="flex items-center justify-between text-xs mb-1">
-                      <span class="font-bold text-slate-600">Toleransi Pembersihan Background:</span>
-                      <span id="tolerance-val" class="font-mono font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">32</span>
-                    </div>
-                    <input type="range" id="bg-tolerance" min="8" max="75" value="32" oninput="updateTolerance(this.value)" class="w-full accent-emerald-600 cursor-pointer">
-                    <div class="flex justify-between text-[10px] text-slate-400 mt-0.5">
-                      <span>Presisi Ketat (8)</span>
-                      <span>Sedang (32)</span>
-                      <span>Sangat Luas (75)</span>
+                    <div>
+                      <div class="flex justify-between text-[11px] mb-1">
+                        <span class="font-bold text-slate-600">Toleransi Pemotongan Latar:</span>
+                        <span id="tolerance-val" class="font-mono font-bold text-emerald-700">35</span>
+                      </div>
+                      <input type="range" id="bg-tolerance" min="8" max="80" value="35" oninput="updateTolerance(this.value)" class="w-full accent-emerald-600 cursor-pointer">
                     </div>
                   </div>
 
-                  <!-- Scale & Vertical Offset -->
+                  <!-- Kontrol Skala Foto & Geser Vertikal (Selalu Aktif untuk Foto Sampel maupun Foto Unggahan) -->
                   <div class="grid grid-cols-2 gap-3 pt-2 border-t border-slate-200">
                     <div>
                       <div class="flex justify-between text-[11px] mb-1">
-                        <span class="font-semibold text-slate-600">Ukuran Foto (Zoom):</span>
+                        <span class="font-semibold text-slate-600">Skala Foto:</span>
                         <span id="scale-val" class="font-mono font-bold text-slate-700">100%</span>
                       </div>
-                      <input type="range" id="photo-scale" min="70" max="140" value="100" oninput="updatePhotoScale(this.value)" class="w-full accent-emerald-600 cursor-pointer">
+                      <input type="range" id="photo-scale" min="75" max="135" value="100" oninput="updatePhotoScale(this.value)" class="w-full accent-emerald-600 cursor-pointer">
                     </div>
                     <div>
                       <div class="flex justify-between text-[11px] mb-1">
-                        <span class="font-semibold text-slate-600">Posisi Atas-Bawah:</span>
+                        <span class="font-semibold text-slate-600">Geser Vertikal:</span>
                         <span id="offset-val" class="font-mono font-bold text-slate-700">0px</span>
                       </div>
                       <input type="range" id="photo-offset" min="-40" max="40" value="0" oninput="updatePhotoOffset(this.value)" class="w-full accent-emerald-600 cursor-pointer">
                     </div>
                   </div>
-
                 </div>
-
-                <!-- Quick Presets -->
-                <div>
-                  <p class="text-xs font-bold text-slate-600 mb-2">Gunakan Foto Contoh untuk Pengujian Cepat:</p>
-                  <div class="flex flex-wrap gap-2">
-                    <button type="button" onclick="loadPresetHalfBody()" class="px-3 py-1.5 rounded-xl border border-emerald-300 bg-emerald-50 text-emerald-800 hover:bg-emerald-100 text-xs font-bold transition flex items-center space-x-1.5">
-                      <i class="fa-solid fa-user-tie text-emerald-600"></i>
-                      <span>1. Foto Contoh Setengah Badan (Resmi)</span>
-                    </button>
-                    <button type="button" onclick="loadPresetBlueBg()" class="px-3 py-1.5 rounded-xl border border-blue-300 bg-blue-50 text-blue-800 hover:bg-blue-100 text-xs font-bold transition flex items-center space-x-1.5">
-                      <i class="fa-solid fa-wand-magic-sparkles text-blue-600"></i>
-                      <span>2. Foto Latar Biru (Uji Hapus Background)</span>
-                    </button>
-                  </div>
-                </div>
-
               </div>
 
-              <!-- Submit Button -->
+              <!-- Tombol Kirim Pengajuan -->
               <div class="pt-2">
                 <button type="submit" class="w-full py-4 px-6 rounded-2xl bg-gradient-to-r from-emerald-700 via-emerald-600 to-teal-700 hover:from-emerald-800 hover:to-teal-800 text-white font-black text-base shadow-xl shadow-emerald-700/25 transition transform hover:-translate-y-0.5 flex items-center justify-center space-x-2">
                   <i class="fa-solid fa-paper-plane"></i>
-                  <span>Kirim Permintaan & Daftarkan ID Card</span>
+                  <span>Kirim Pengajuan ID Card</span>
                 </button>
-                <p class="text-xs text-center text-slate-400 mt-2">
-                  Data akan otomatis diteruskan ke <strong>Dashboard Status</strong> untuk dipantau prosesnya.
-                </p>
               </div>
 
             </form>
           </div>
 
-          <!-- RIGHT COLUMN: LIVE ID CARD PREVIEW (KANWIL KEMENAG KALSEL TEMPLATE) -->
+          <!-- RIGHT COLUMN: LIVE PREVIEW ID CARD -->
           <div class="lg:col-span-5 sticky top-24">
             <div class="bg-slate-900 rounded-3xl p-6 text-white shadow-2xl border border-slate-800">
               
               <!-- Header Toggle Front / Back -->
               <div class="flex items-center justify-between pb-4 border-b border-slate-800 mb-6">
-                <div class="flex items-center space-x-2">
-                  <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
-                  <h4 class="font-bold text-xs tracking-wide uppercase text-slate-200">Pratinjau Live ID Card</h4>
+                <div>
+                  <div class="flex items-center space-x-2">
+                    <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                    <h4 class="font-bold text-xs tracking-wide uppercase text-slate-200">Live Preview ID Card</h4>
+                  </div>
+                  <p id="live-preview-template-label" class="text-[10px] text-emerald-400 font-semibold mt-0.5">Template Standar Kemenag</p>
                 </div>
                 
                 <div class="flex items-center bg-slate-800 p-1 rounded-xl border border-slate-700">
                   <button type="button" id="btn-view-front" onclick="switchPreviewSide('front')" class="px-3.5 py-1.5 rounded-lg text-xs font-bold bg-emerald-700 text-white shadow transition">
-                    Tampak Depan
+                    Sisi Depan
                   </button>
                   <button type="button" id="btn-view-back" onclick="switchPreviewSide('back')" class="px-3.5 py-1.5 rounded-lg text-xs font-bold text-slate-400 hover:text-white transition">
-                    Tampak Belakang
+                    Sisi Belakang
                   </button>
                 </div>
               </div>
@@ -816,69 +689,59 @@
                 <div id="card-preview-front" class="kemenag-card kemenag-card-front">
                   <div class="card-hologram"></div>
                   
-                  <!-- Person's Cutout Half-Body Photo Layer -->
+                  <!-- Elemen Pasfoto Transparan Menyatu Tanpa Kotak Kaku -->
                   <div id="preview-photo-layer" class="kemenag-photo-layer">
-                    <img id="preview-photo" src="assets/sample_pegawai_setengah_badan.png" alt="Foto Pegawai Setengah Badan" class="kemenag-photo-img">
-                  </div>
-
-                  <!-- Placeholder Layer when no photo uploaded / photo in general office -->
-                  <div id="preview-photo-placeholder" class="kemenag-photo-layer hidden flex-col items-center justify-center p-6 text-center z-15">
-                    <div class="w-16 h-16 rounded-2xl bg-white/80 backdrop-blur-xs border-2 border-dashed border-emerald-600/60 flex items-center justify-center text-emerald-800 shadow-sm mb-2">
-                      <i class="fa-solid fa-camera text-2xl text-emerald-700"></i>
-                    </div>
-                    <span class="text-xs font-bold text-emerald-950 bg-white/90 px-2.5 py-1 rounded-lg backdrop-blur-xs shadow-xs">
-                      Foto di Bagian Umum
-                    </span>
-                    <span class="text-[10px] text-slate-700 font-semibold mt-1 bg-white/70 px-2 py-0.5 rounded">
-                      (Belum Ada File Foto)
-                    </span>
+                    <img id="preview-photo" src="assets/sample_pegawai_setengah_badan.png" alt="Pasfoto Pegawai" class="kemenag-photo-img">
                   </div>
 
                   <div class="kemenag-wave-overlay"></div>
 
                   <div class="kemenag-front-text">
-                    <h3 id="preview-name" class="kemenag-front-name">RAHMAT HIDAYAT, S.Kom, M.M.</h3>
+                    <h3 id="preview-name" class="kemenag-front-name">NAMA LENGKAP PEGAWAI</h3>
                     <p id="preview-nip" class="kemenag-front-nip">NIP. 198804122014021003</p>
                   </div>
                 </div>
 
-                <!-- BACK CARD PREVIEW (100% MATCHING OFFICIAL TEMPLATE) -->
+                <!-- BACK CARD PREVIEW -->
                 <div id="card-preview-back" class="kemenag-card kemenag-card-back hidden">
                   <div class="card-hologram"></div>
                   
                   <div class="kemenag-back-content">
                     <p class="back-text-item back-label-gap uppercase">NAMA</p>
-                    <p id="back-preview-name" class="back-text-item back-section-gap">Rahmat Hidayat, S.Kom, M.M.</p>
+                    <p id="back-preview-name" class="back-text-item back-section-gap">Nama Lengkap Pegawai</p>
 
                     <p class="back-text-item back-label-gap uppercase">NIP</p>
                     <p id="back-preview-nip" class="back-text-item back-section-gap">198804122014021003</p>
 
-                    <p class="back-text-item back-label-gap uppercase">JABATAN</p>
+                    <p class="back-text-item back-label-gap uppercase">JABATAN / UNIT KERJA</p>
                     <p id="back-preview-jabatan" class="back-text-item">Pranata Komputer Ahli Muda</p>
-                    <p id="back-preview-bidang" class="back-text-item back-section-gap">Sub Bagian Perencanaan, Data & Informasi</p>
+                    <p id="back-preview-bidang" class="back-text-item back-section-gap">Sub Bagian Perencanaan, Data &amp; Informasi</p>
 
                     <p class="back-text-item back-label-gap uppercase">ALAMAT KANTOR</p>
                     <p id="back-preview-alamat1" class="back-text-item">Jl. D.I. Panjaitan</p>
                     <p id="back-preview-alamat2" class="back-text-item back-section-gap">No. 19 Banjarmasin</p>
 
-                    <p id="back-preview-date" class="back-text-item back-section-gap">Banjarmasin, 14 Oktober 2026</p>
+                    <p id="back-preview-date" class="back-text-item back-section-gap">Banjarmasin, 19 Oktober 2026</p>
 
-                    <!-- Penandatangan Kepala Kanwil (Dapat diubah oleh Admin) -->
-                    <p id="back-preview-kepala-title" class="back-kepala-title">KEPALA</p>
-                    <p id="back-preview-kepala-name" class="back-kepala-name">Dr. H. MUHAMMAD TAMBRIN, M.M.Pd</p>
-                    <p id="back-preview-kepala-nip" class="back-kepala-nip">NIP. 196912181996031003</p>
+                    <!-- Blok Tanda Tangan & Stempel Pimpinan Dinamis -->
+                    <div class="back-signature-block">
+                      <p id="back-preview-kepala-title" class="back-kepala-title">KEPALA</p>
+                      <img id="back-preview-ttd-img" src="" alt="TTD Pimpinan" class="back-ttd-img hidden">
+                      <p id="back-preview-kepala-name" class="back-kepala-name">Dr. H. MUHAMMAD TAMBRIN, M.M.Pd</p>
+                      <p id="back-preview-kepala-nip" class="back-kepala-nip">NIP. 196705121994031002</p>
+                    </div>
                   </div>
                 </div>
 
               </div>
 
-              <!-- Live Card Hint -->
+              <!-- Live Card Info Footer -->
               <div class="mt-4 p-3 rounded-2xl bg-slate-800/80 border border-slate-700/80 text-xs text-slate-300 flex items-center justify-between">
                 <span class="flex items-center space-x-2">
-                  <i class="fa-solid fa-check-double text-emerald-400"></i>
-                  <span>Format Presisi Standar CR-80 PVC</span>
+                  <i class="fa-solid fa-wand-magic-sparkles text-emerald-400"></i>
+                  <span id="live-preview-ratio-info">Pasfoto Transparan Menyatu Desain Kartu</span>
                 </span>
-                <span class="text-[10px] bg-slate-700 px-2 py-0.5 rounded font-mono">54 x 85.6 mm</span>
+                <span class="text-[10px] bg-slate-700 px-2 py-0.5 rounded font-mono">CR80 (54x85.6mm)</span>
               </div>
 
             </div>
@@ -889,50 +752,47 @@
       </div>
     </section>
 
-
     <!-- ======================================================== -->
-    <!-- TAB 3: DASHBOARD STATUS ID CARD (UNTUK AUDIENS / PEGAWAI) -->
+    <!-- TAB 3: DASHBOARD STATUS & PELACAKAN (MODE PEGAWAI - READ ONLY) -->
     <!-- ======================================================== -->
     <section id="tab-dashboard" class="tab-pane py-8 sm:py-12">
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         
         <!-- Header Section -->
-        <div class="mb-8">
-          <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
-            <div>
-              <span class="text-xs font-extrabold tracking-wider text-emerald-800 uppercase bg-emerald-50 px-3 py-1 rounded-full border border-emerald-200">
-                Pusat Pelacakan Status Pegawai
-              </span>
-              <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900 mt-2">
-                Dashboard Status ID Card Pegawai
-              </h2>
-              <p class="text-slate-600 text-sm mt-1">
-                Pantau perkembangan pembuatan ID Card Anda secara real-time dari antrean verifikasi hingga kartu selesai diproduksi.
-              </p>
-            </div>
-            
-            <div class="flex items-center space-x-2.5">
-              <button type="button" onclick="syncWithBackend(false)" id="btn-sync-dashboard" class="px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 font-bold text-xs sm:text-sm shadow-xs transition flex items-center space-x-2" title="Sinkronkan data dari Google Sheets">
-                <i id="sync-icon-dashboard" class="fa-solid fa-arrows-rotate text-emerald-600"></i>
-                <span id="sync-text-dashboard">Sinkronkan Sheets</span>
-              </button>
+        <div class="mb-8 flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div>
+            <span class="text-xs font-extrabold tracking-wider text-emerald-800 uppercase bg-emerald-50 px-3 py-1 rounded-full border border-emerald-200">
+              Mode Pengguna / Pegawai (Read-Only)
+            </span>
+            <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900 mt-2">
+              Dashboard Status & Pelacakan Antrean
+            </h2>
+            <p class="text-slate-600 text-sm mt-1">
+              Cari dan pantau status pengajuan pencetakan ID Card Anda berdasarkan <strong>NIP</strong> atau <strong>Nomor Tiket</strong>.
+            </p>
+          </div>
+          
+          <div class="flex items-center space-x-2.5">
+            <button type="button" onclick="syncWithBackend(false)" id="btn-sync-dashboard" class="px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 font-bold text-xs sm:text-sm shadow-xs transition flex items-center space-x-2">
+              <i id="sync-icon-dashboard" class="fa-solid fa-arrows-rotate text-emerald-600"></i>
+              <span id="sync-text-dashboard">Muat Ulang Data</span>
+            </button>
 
-              <button onclick="switchTab('formulir')" class="px-4 py-2.5 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-xs sm:text-sm shadow-md shadow-emerald-700/20 transition flex items-center space-x-2">
-                <i class="fa-solid fa-plus"></i>
-                <span>Ajukan ID Card Baru</span>
-              </button>
-            </div>
+            <button onclick="switchTab('formulir')" class="px-4 py-2.5 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-xs sm:text-sm shadow-md shadow-emerald-700/20 transition flex items-center space-x-2">
+              <i class="fa-solid fa-plus"></i>
+              <span>Ajukan ID Card</span>
+            </button>
           </div>
         </div>
 
-        <!-- Metric Badges -->
+        <!-- Metric Cards -->
         <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-8">
           <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm flex items-center space-x-4">
             <div class="w-12 h-12 rounded-xl bg-emerald-50 text-emerald-700 flex items-center justify-center text-xl flex-shrink-0">
               <i class="fa-solid fa-id-card"></i>
             </div>
             <div>
-              <p class="text-xs text-slate-500 font-semibold">Total Pengajuan</p>
+              <p class="text-xs text-slate-500 font-semibold">Total Antrean</p>
               <h3 id="stat-total" class="text-2xl font-black text-slate-900">0</h3>
             </div>
           </div>
@@ -962,17 +822,17 @@
               <i class="fa-solid fa-circle-check"></i>
             </div>
             <div>
-              <p class="text-xs text-slate-500 font-semibold">Selesai (Siap Diambil)</p>
+              <p class="text-xs text-slate-500 font-semibold">Selesai</p>
               <h3 id="stat-completed" class="text-2xl font-black text-emerald-700">0</h3>
             </div>
           </div>
         </div>
 
-        <!-- Search & Filter Controls -->
+        <!-- Search & Filter Controls (Cari NIP atau Nomor Tiket) -->
         <div class="bg-white rounded-2xl p-4 sm:p-5 border border-slate-200 shadow-sm mb-6 flex flex-col md:flex-row items-center justify-between gap-4">
           <div class="relative w-full md:w-96">
             <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
-            <input type="text" id="dashboard-search-input" placeholder="Cari Nama Pegawai, NIP, Unit Kerja..." oninput="renderDashboardTable()" class="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-emerald-600 text-sm transition">
+            <input type="text" id="dashboard-search-input" placeholder="Cari NIP (18 digit), Nomor Tiket (KMN-2026-XXXX), atau Nama..." oninput="renderDashboardTable()" class="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-emerald-600 text-sm transition">
           </div>
 
           <div class="flex items-center space-x-2 w-full md:w-auto overflow-x-auto pb-1 md:pb-0">
@@ -980,7 +840,7 @@
               Semua (<span id="filter-all-count">0</span>)
             </button>
             <button onclick="setDashboardFilter('Menunggu Verifikasi')" class="dashboard-filter-btn px-3.5 py-1.5 rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-100 transition whitespace-nowrap" data-filter="Menunggu Verifikasi">
-              Menunggu (<span id="filter-pending-count">0</span>)
+              Menunggu Verifikasi (<span id="filter-pending-count">0</span>)
             </button>
             <button onclick="setDashboardFilter('Sedang Dicetak')" class="dashboard-filter-btn px-3.5 py-1.5 rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-100 transition whitespace-nowrap" data-filter="Sedang Dicetak">
               Sedang Dicetak (<span id="filter-printing-count">0</span>)
@@ -991,21 +851,22 @@
           </div>
         </div>
 
-        <!-- Audience Table View (Read-Only Status, No dropdown, No action/print column) -->
+        <!-- Tabel Antrean Mode Pegawai (3.2: Nomor Tiket, Foto Profil 40x40, Nama Pegawai, NIP, Unit Kerja, Jabatan, Lencana Status) -->
         <div class="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
           <div class="overflow-x-auto">
             <table class="w-full text-left border-collapse">
               <thead>
                 <tr class="bg-slate-50/80 border-b border-slate-200 text-[11px] font-extrabold uppercase tracking-wider text-slate-500">
-                  <th class="py-3.5 px-4 sm:px-6">No. Tiket</th>
-                  <th class="py-3.5 px-4 sm:px-6">Data Pegawai</th>
-                  <th class="py-3.5 px-4 sm:px-6">Unit Kerja / Bidang & Jabatan</th>
-                  <th class="py-3.5 px-4 sm:px-6">Tgl Pengajuan</th>
-                  <th class="py-3.5 px-4 sm:px-6 text-center">Status ID Card</th>
+                  <th class="py-3.5 px-4 sm:px-5">Nomor Tiket</th>
+                  <th class="py-3.5 px-4 sm:px-5">Foto & Nama Pegawai</th>
+                  <th class="py-3.5 px-4 sm:px-5">NIP</th>
+                  <th class="py-3.5 px-4 sm:px-5">Unit Kerja</th>
+                  <th class="py-3.5 px-4 sm:px-5">Jabatan</th>
+                  <th class="py-3.5 px-4 sm:px-5 text-center">Status</th>
                 </tr>
               </thead>
               <tbody id="dashboard-table-body" class="divide-y divide-slate-100 text-sm">
-                <!-- Populated dynamically via JS -->
+                <!-- Diisi secara dinamis oleh renderDashboardTable() -->
               </tbody>
             </table>
           </div>
@@ -1014,13 +875,10 @@
             <div class="w-16 h-16 rounded-2xl bg-slate-100 text-slate-400 flex items-center justify-center mx-auto text-2xl mb-3">
               <i class="fa-solid fa-folder-open"></i>
             </div>
-            <h4 class="text-base font-bold text-slate-700">Belum Ada Permohonan ID Card</h4>
+            <h4 class="text-base font-bold text-slate-700">Data Antrean Tidak Ditemukan</h4>
             <p class="text-xs text-slate-500 max-w-sm mx-auto mt-1 mb-4">
-              Silakan isi formulir terlebih dahulu untuk mengajukan permohonan ID Card pegawai.
+              Belum ada pengajuan yang sesuai dengan kata kunci NIP atau Nomor Tiket yang Anda cari.
             </p>
-            <button onclick="switchTab('formulir')" class="px-4 py-2 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-xs shadow transition">
-              Buka Formulir
-            </button>
           </div>
         </div>
 
@@ -1028,135 +886,127 @@
     </section>
 
     <!-- ======================================================== -->
-    <!-- TAB 4: PANEL ADMIN (MANAGEMENT, STATUS CHANGER, UNIT DROPDOWN & TEMPLATE SETTINGS) -->
+    <!-- TAB 4: PANEL KENDALI ADMIN (MODE ADMIN - WAJIB LOGIN) -->
     <!-- ======================================================== -->
     <section id="tab-admin" class="tab-pane py-8 sm:py-12">
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
 
-        <!-- Admin Top Banner / Greeting -->
+        <!-- Admin Top Banner -->
         <div class="bg-gradient-to-r from-slate-900 via-emerald-950 to-teal-950 rounded-3xl p-6 sm:p-8 text-white shadow-xl border border-emerald-900/40 relative overflow-hidden">
-          <div class="absolute -right-16 -top-16 w-64 h-64 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none"></div>
-          
           <div class="flex flex-col md:flex-row md:items-center justify-between gap-6 relative z-10">
             <div>
               <div class="flex items-center space-x-2.5">
-                <span class="px-2.5 py-0.5 rounded-full text-[11px] font-extrabold uppercase tracking-wider bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
-                  <i class="fa-solid fa-shield-halved mr-1"></i>Hak Akses Petugas Admin
+                <span id="admin-banner-role" class="px-2.5 py-0.5 rounded-full text-[11px] font-extrabold uppercase tracking-wider bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                  Superadmin
                 </span>
-                <span class="text-xs text-slate-400 font-mono">ID: ADMIN-KANWIL</span>
+                <span id="admin-banner-username" class="text-xs text-slate-300 font-mono">@admin</span>
               </div>
               <h2 class="text-2xl sm:text-3xl font-black tracking-tight text-white mt-2">
-                Panel Kontrol ID Card Pegawai
+                Panel Kendali Pengelolaan CetakID Kemenag
               </h2>
-              <p class="text-xs sm:text-sm text-slate-300 mt-1 max-w-2xl leading-relaxed">
-                Kelola status pengerjaan kartu, modifikasi data pegawai pemohon, atur pilihan unit kerja pada dropdown, serta ubah informasi penandatangan Kepala Kanwil pada sisi belakang kartu.
+              <p class="text-xs sm:text-sm text-slate-300 mt-1 max-w-2xl">
+                Verifikasi antrean pegawai, koreksi biodata, cetak kartu fisik CR80 (1 atau 2 sisi), atur pejabat pengesah & template kartu dinamis, serta kelola akun petugas admin.
               </p>
             </div>
 
             <div class="flex items-center space-x-2.5 self-start md:self-auto">
-              <button type="button" onclick="syncWithBackend(false)" class="px-3.5 py-2.5 rounded-xl border border-emerald-800/80 bg-emerald-950/70 hover:bg-emerald-900 text-emerald-200 font-bold text-xs shadow-md transition flex items-center space-x-2" title="Sinkronkan pembaruan dengan Google Sheets">
+              <button type="button" onclick="syncWithBackend(false)" class="px-3.5 py-2.5 rounded-xl border border-emerald-800/80 bg-emerald-950/70 hover:bg-emerald-900 text-emerald-200 font-bold text-xs shadow-md transition flex items-center space-x-2">
                 <i class="fa-solid fa-arrows-rotate text-emerald-400 text-xs"></i>
                 <span>Sinkronkan Sheets</span>
               </button>
 
-              <button onclick="openAdminAddEmployeeModal()" class="px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs shadow-md shadow-emerald-900/30 transition flex items-center space-x-2">
+              <button onclick="openAdminAddEmployeeModal()" class="px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs shadow-md transition flex items-center space-x-2">
                 <i class="fa-solid fa-user-plus text-xs"></i>
-                <span>Tambah Pegawai Baru</span>
+                <span>Tambah Pengajuan</span>
               </button>
             </div>
           </div>
 
-          <!-- Quick Statistics for Admin -->
+          <!-- Statistik Ringkas Admin -->
           <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mt-6 pt-6 border-t border-slate-800/80">
-            <div class="bg-slate-800/60 backdrop-blur-xs p-3.5 sm:p-4 rounded-2xl border border-slate-700/60">
-              <span class="text-[11px] font-bold uppercase tracking-wider text-slate-400">Total Permintaan</span>
-              <p id="admin-stat-total" class="text-2xl sm:text-3xl font-black text-white mt-1">0</p>
+            <div class="bg-slate-800/60 p-3.5 rounded-2xl border border-slate-700/60">
+              <span class="text-[11px] font-bold uppercase tracking-wider text-slate-400">Total Antrean</span>
+              <p id="admin-stat-total" class="text-2xl font-black text-white mt-1">0</p>
             </div>
-            <div class="bg-amber-950/30 backdrop-blur-xs p-3.5 sm:p-4 rounded-2xl border border-amber-800/40">
-              <span class="text-[11px] font-bold uppercase tracking-wider text-amber-300">Belum Dikerjakan</span>
-              <p id="admin-stat-pending" class="text-2xl sm:text-3xl font-black text-amber-400 mt-1">0</p>
+            <div class="bg-amber-950/30 p-3.5 rounded-2xl border border-amber-800/40">
+              <span class="text-[11px] font-bold uppercase tracking-wider text-amber-300">Menunggu Verifikasi</span>
+              <p id="admin-stat-pending" class="text-2xl font-black text-amber-400 mt-1">0</p>
             </div>
-            <div class="bg-sky-950/30 backdrop-blur-xs p-3.5 sm:p-4 rounded-2xl border border-sky-800/40">
-              <span class="text-[11px] font-bold uppercase tracking-wider text-sky-300">Sedang Dikerjakan</span>
-              <p id="admin-stat-printing" class="text-2xl sm:text-3xl font-black text-sky-400 mt-1">0</p>
+            <div class="bg-sky-950/30 p-3.5 rounded-2xl border border-sky-800/40">
+              <span class="text-[11px] font-bold uppercase tracking-wider text-sky-300">Sedang Dicetak</span>
+              <p id="admin-stat-printing" class="text-2xl font-black text-sky-400 mt-1">0</p>
             </div>
-            <div class="bg-emerald-950/30 backdrop-blur-xs p-3.5 sm:p-4 rounded-2xl border border-emerald-800/40">
-              <span class="text-[11px] font-bold uppercase tracking-wider text-emerald-300">Sudah Selesai</span>
-              <p id="admin-stat-completed" class="text-2xl sm:text-3xl font-black text-emerald-400 mt-1">0</p>
+            <div class="bg-emerald-950/30 p-3.5 rounded-2xl border border-emerald-800/40">
+              <span class="text-[11px] font-bold uppercase tracking-wider text-emerald-300">Selesai</span>
+              <p id="admin-stat-completed" class="text-2xl font-black text-emerald-400 mt-1">0</p>
             </div>
           </div>
         </div>
 
-        <!-- Admin Sub-Navigation Tabs -->
+        <!-- Sub-Tab Navigation Bar -->
         <div class="flex items-center space-x-2 border-b border-slate-200 pb-3 overflow-x-auto">
-          <button id="admin-tab-btn-requests" onclick="switchAdminSubTab('requests')" class="admin-subtab-btn px-3.5 py-1.5 rounded-xl text-xs font-bold bg-emerald-700 text-white shadow-xs transition flex items-center space-x-1.5 whitespace-nowrap">
+          <button id="admin-tab-btn-requests" onclick="switchAdminSubTab('requests')" class="admin-subtab-btn px-4 py-2 rounded-xl text-xs font-bold bg-emerald-700 text-white shadow-xs transition flex items-center space-x-1.5 whitespace-nowrap">
             <i class="fa-solid fa-list-check"></i>
-            <span>Daftar Permintaan & Status</span>
+            <span>Manajemen Antrean & Cetak</span>
             <span id="admin-badge-req-count" class="ml-1.5 px-2 py-0.2 rounded-full text-[10px] bg-emerald-900 text-emerald-100">0</span>
           </button>
 
-          <button id="admin-tab-btn-units" onclick="switchAdminSubTab('units')" class="admin-subtab-btn px-3.5 py-1.5 rounded-xl text-xs font-semibold text-slate-600 hover:text-emerald-800 hover:bg-slate-100 transition flex items-center space-x-1.5 whitespace-nowrap">
-            <i class="fa-solid fa-sitemap"></i>
-            <span>Kelola Unit Kerja</span>
-            <span id="admin-badge-units-count" class="ml-1.5 px-2 py-0.2 rounded-full text-[10px] bg-slate-200 text-slate-700">14</span>
+          <button id="admin-tab-btn-template" onclick="switchAdminSubTab('template')" class="admin-subtab-btn px-4 py-2 rounded-xl text-xs font-semibold text-slate-600 hover:text-emerald-800 hover:bg-slate-100 transition flex items-center space-x-1.5 whitespace-nowrap">
+            <i class="fa-solid fa-id-card-clip"></i>
+            <span>Pengaturan Kartu & Pimpinan</span>
           </button>
 
-          <button id="admin-tab-btn-template" onclick="switchAdminSubTab('template')" class="admin-subtab-btn px-3.5 py-1.5 rounded-xl text-xs font-semibold text-slate-600 hover:text-emerald-800 hover:bg-slate-100 transition flex items-center space-x-1.5 whitespace-nowrap">
-            <i class="fa-solid fa-signature"></i>
-            <span>Pengaturan Tampak Belakang</span>
+          <button id="admin-tab-btn-admins" onclick="switchAdminSubTab('admins')" class="admin-subtab-btn px-4 py-2 rounded-xl text-xs font-semibold text-slate-600 hover:text-emerald-800 hover:bg-slate-100 transition flex items-center space-x-1.5 whitespace-nowrap">
+            <i class="fa-solid fa-users-gear"></i>
+            <span>Kelola Petugas Admin</span>
+          </button>
+
+          <button id="admin-tab-btn-units" onclick="switchAdminSubTab('units')" class="admin-subtab-btn px-4 py-2 rounded-xl text-xs font-semibold text-slate-600 hover:text-emerald-800 hover:bg-slate-100 transition flex items-center space-x-1.5 whitespace-nowrap">
+            <i class="fa-solid fa-sitemap"></i>
+            <span>Kelola Unit Kerja</span>
+            <span id="admin-badge-units-count" class="ml-1.5 px-2 py-0.2 rounded-full text-[10px] bg-slate-200 text-slate-700">15</span>
           </button>
         </div>
 
-        <!-- ============================================== -->
-        <!-- SUB-TAB 1: DAFTAR PERMINTAAN ID CARD & STATUS -->
-        <!-- ============================================== -->
+        <!-- ============================================================== -->
+        <!-- SUB-TAB 1: MODUL MANAJEMEN ANTREAN & CETAK (PRD 3.3) -->
+        <!-- ============================================================== -->
         <div id="admin-view-requests" class="admin-subview space-y-5">
           
-          <!-- Filters & Actions Bar -->
           <div class="bg-white rounded-2xl p-4 sm:p-5 border border-slate-200 shadow-xs flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-            
-            <!-- Search Input -->
             <div class="relative flex-1 max-w-md">
               <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-3.5 text-slate-400 text-sm"></i>
-              <input type="text" id="admin-search-input" oninput="renderAdminTable()" placeholder="Cari nama, NIP, no tiket, jabatan..." class="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-emerald-600 text-xs sm:text-sm">
+              <input type="text" id="admin-search-input" oninput="renderAdminTable()" placeholder="Cari Nomor Tiket, NIP, Nama Pegawai, Unit Kerja..." class="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-emerald-600 text-xs sm:text-sm">
             </div>
 
-            <!-- Filters -->
             <div class="flex flex-wrap items-center gap-2">
-              <span class="text-xs font-bold text-slate-500 mr-1">Status:</span>
               <button onclick="setAdminFilter('all')" data-admin-filter="all" class="admin-filter-btn px-3 py-1.5 rounded-xl text-xs font-bold bg-emerald-700 text-white shadow-xs">Semua</button>
-              <button onclick="setAdminFilter('Menunggu Verifikasi')" data-admin-filter="Menunggu Verifikasi" class="admin-filter-btn px-3 py-1.5 rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-100">Belum Dikerjakan</button>
-              <button onclick="setAdminFilter('Sedang Dicetak')" data-admin-filter="Sedang Dicetak" class="admin-filter-btn px-3 py-1.5 rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-100">Sedang Dikerjakan</button>
+              <button onclick="setAdminFilter('Menunggu Verifikasi')" data-admin-filter="Menunggu Verifikasi" class="admin-filter-btn px-3 py-1.5 rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-100">Menunggu Verifikasi</button>
+              <button onclick="setAdminFilter('Sedang Dicetak')" data-admin-filter="Sedang Dicetak" class="admin-filter-btn px-3 py-1.5 rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-100">Sedang Dicetak</button>
               <button onclick="setAdminFilter('Selesai')" data-admin-filter="Selesai" class="admin-filter-btn px-3 py-1.5 rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-100">Selesai</button>
 
-              <select id="admin-filter-unit" onchange="renderAdminTable()" class="ml-2 px-3 py-1.5 rounded-xl border border-slate-200 text-xs font-semibold focus:ring-emerald-600">
+              <select id="admin-filter-unit" onchange="renderAdminTable()" class="px-3 py-1.5 rounded-xl border border-slate-200 text-xs font-semibold focus:ring-emerald-600">
                 <option value="all">Semua Unit Kerja</option>
               </select>
-
-              <button type="button" onclick="openAdminAddEmployeeModal()" class="ml-auto px-3.5 py-1.5 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-xs shadow-xs transition flex items-center space-x-1.5 whitespace-nowrap">
-                <i class="fa-solid fa-user-plus text-xs"></i>
-                <span>Tambah Pegawai</span>
-              </button>
             </div>
-
           </div>
 
-          <!-- Admin ID Card Requests Table -->
           <div class="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
             <div class="overflow-x-auto">
               <table class="w-full text-left border-collapse">
                 <thead>
                   <tr class="bg-slate-50/90 border-b border-slate-200 text-[11px] font-extrabold uppercase tracking-wider text-slate-500">
-                    <th class="py-3.5 px-4 sm:px-6">No. Tiket</th>
-                    <th class="py-3.5 px-4 sm:px-6">Pegawai</th>
-                    <th class="py-3.5 px-4 sm:px-6">Unit Kerja / Jabatan</th>
-                    <th class="py-3.5 px-4 sm:px-6">Tgl Masuk</th>
-                    <th class="py-3.5 px-4 sm:px-6 text-center">Atur Status Pengerjaan</th>
-                    <th class="py-3.5 px-4 sm:px-6 text-center">Aksi Petugas</th>
+                    <th class="py-3.5 px-4 sm:px-5">Nomor Tiket</th>
+                    <th class="py-3.5 px-4 sm:px-5">Pegawai & NIP</th>
+                    <th class="py-3.5 px-4 sm:px-5">Kontak (WA)</th>
+                    <th class="py-3.5 px-4 sm:px-5">Unit Kerja & Jabatan</th>
+                    <th class="py-3.5 px-4 sm:px-5">Tanggal</th>
+                    <th class="py-3.5 px-4 sm:px-5 text-center">Ubah Status Cetak</th>
+                    <th class="py-3.5 px-4 sm:px-5 text-center">Aksi Pengelolaan</th>
                   </tr>
                 </thead>
                 <tbody id="admin-table-body" class="divide-y divide-slate-100 text-sm">
-                  <!-- Populated dynamically via JS -->
+                  <!-- Diisi secara dinamis oleh renderAdminTable() -->
                 </tbody>
               </table>
             </div>
@@ -1165,31 +1015,334 @@
               <div class="w-16 h-16 rounded-2xl bg-slate-100 text-slate-400 flex items-center justify-center mx-auto text-2xl mb-3">
                 <i class="fa-solid fa-inbox"></i>
               </div>
-              <h4 class="text-base font-bold text-slate-700">Tidak Ada Permintaan yang Cocok</h4>
-              <p class="text-xs text-slate-500 max-w-sm mx-auto mt-1">Coba sesuaikan kata kunci pencarian atau ubah filter status.</p>
+              <h4 class="text-base font-bold text-slate-700">Tidak Ada Data Antrean</h4>
+              <p class="text-xs text-slate-500 max-w-sm mx-auto mt-1">Sesuaikan kata kunci pencarian atau filter status.</p>
             </div>
           </div>
 
         </div>
 
-        <!-- ============================================== -->
-        <!-- SUB-TAB 2: KELOLA DROPDOWN UNIT KERJA / BIDANG -->
-        <!-- ============================================== -->
-        <div id="admin-view-units" class="admin-subview hidden space-y-6">
+        <!-- ============================================================== -->
+        <!-- SUB-TAB 2: PENGATURAN KARTU & PIMPINAN DINAMIS (PRD 3.4) -->
+        <!-- ============================================================== -->
+        <div id="admin-view-template" class="admin-subview hidden space-y-6">
           <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
             
-            <!-- Left: Add New Unit Form -->
-            <div class="lg:col-span-5 bg-white rounded-3xl p-6 sm:p-8 border border-slate-200 shadow-sm space-y-5">
+            <!-- Kiri: Form Konfigurasi Pejabat Pengesah & Template Kartu -->
+            <div class="lg:col-span-7 bg-white rounded-3xl p-6 sm:p-8 border border-slate-200 shadow-sm space-y-6">
               <div class="border-b border-slate-100 pb-3">
-                <h3 class="text-base font-bold text-slate-900 flex items-center space-x-2">
-                  <span class="w-6 h-6 rounded-full bg-emerald-100 text-emerald-800 text-xs font-bold flex items-center justify-center">
-                    <i class="fa-solid fa-plus text-[10px]"></i>
-                  </span>
-                  <span>Tambah Pilihan Unit Kerja Baru</span>
+                <h3 class="text-lg font-extrabold text-slate-900 flex items-center space-x-2">
+                  <i class="fa-solid fa-id-card-clip text-emerald-700"></i>
+                  <span>Pengaturan Kartu & Pejabat Pengesah (Tab: Pengaturan)</span>
                 </h3>
                 <p class="text-xs text-slate-500 mt-1">
-                  Unit kerja yang Anda tambahkan di sini akan langsung muncul pada pilihan dropdown formulir pendaftaran.
+                  Perubahan data pimpinan, tanda tangan/stempel, dan desain template kartu akan langsung diterapkan ke seluruh pratinjau serta layout cetak tanpa perlu mengubah kode program.
                 </p>
+              </div>
+
+              <form onsubmit="handleSaveBackSettings(event)" class="space-y-6">
+                
+                <!-- 1. Pengaturan Pejabat Pengesah (Dinamis) -->
+                <div class="space-y-4">
+                  <h4 class="text-xs font-extrabold uppercase tracking-wider text-emerald-800 bg-emerald-50 px-3 py-1.5 rounded-lg border border-emerald-200 inline-block">
+                    1. Data Pejabat Pengesah / Penandatangan
+                  </h4>
+
+                  <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div class="sm:col-span-2">
+                      <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
+                        Nama Lengkap & Gelar Pimpinan (<code>nama_pimpinan</code>) <span class="text-rose-500">*</span>
+                      </label>
+                      <input type="text" id="setting-kepala-name" required placeholder="Contoh: Dr. H. Muhammad Tambrin, M.M.Pd." oninput="previewBackSettingsLive()" class="w-full px-4 py-2.5 rounded-xl border border-slate-300 focus:ring-2 focus:ring-emerald-600 text-sm font-bold">
+                    </div>
+
+                    <div>
+                      <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
+                        NIP Pimpinan 18 Digit (<code>nip_pimpinan</code>) <span class="text-rose-500">*</span>
+                      </label>
+                      <input type="text" id="setting-kepala-nip" required maxlength="18" inputmode="numeric" placeholder="196705121994031002" oninput="this.value = this.value.replace(/\D/g, ''); previewBackSettingsLive()" class="w-full px-4 py-2.5 rounded-xl border border-slate-300 focus:ring-2 focus:ring-emerald-600 text-sm font-mono font-bold">
+                    </div>
+
+                    <div>
+                      <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
+                        Jabatan Penandatangan (<code>jabatan_pimpinan</code>) <span class="text-rose-500">*</span>
+                      </label>
+                      <input type="text" id="setting-kepala-title" required placeholder="Contoh: KEPALA" oninput="previewBackSettingsLive()" class="w-full px-4 py-2.5 rounded-xl border border-slate-300 focus:ring-2 focus:ring-emerald-600 text-sm font-bold">
+                    </div>
+
+                    <div class="sm:col-span-2">
+                      <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
+                        Tanda Tangan Digital / Stempel Tambahan (<code>ttd_pimpinan_url</code>)
+                      </label>
+                      <div class="flex items-center space-x-2">
+                        <input type="file" id="setting-ttd-file" accept=".png,.jpg,.jpeg,image/png,image/jpeg" onchange="handleConfigImageUpload(event, 'ttd')" class="w-full text-xs file:mr-2 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-bold file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100 text-slate-500 border border-slate-300 rounded-xl p-1">
+                        <button type="button" onclick="clearConfigImage('ttd')" class="px-2.5 py-2 rounded-xl border border-slate-200 text-slate-500 hover:text-rose-600 text-xs" title="Hapus TTD/Stempel">
+                          <i class="fa-solid fa-trash-can"></i>
+                        </button>
+                      </div>
+                      <input type="text" id="setting-ttd-url" placeholder="Atau tempel URL / Data URL PNG transparan..." oninput="previewBackSettingsLive()" class="w-full mt-1.5 px-3 py-1.5 rounded-lg border border-slate-200 text-xs font-mono">
+                    </div>
+
+                    <div>
+                      <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
+                        Alamat Kantor Baris 1
+                      </label>
+                      <input type="text" id="setting-alamat-1" required placeholder="Jl. D.I. Panjaitan" oninput="previewBackSettingsLive()" class="w-full px-4 py-2 rounded-xl border border-slate-300 text-xs font-semibold">
+                    </div>
+
+                    <div>
+                      <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
+                        Alamat Kantor Baris 2
+                      </label>
+                      <input type="text" id="setting-alamat-2" required placeholder="No. 19 Banjarmasin" oninput="previewBackSettingsLive()" class="w-full px-4 py-2 rounded-xl border border-slate-300 text-xs font-semibold">
+                    </div>
+                  </div>
+                </div>
+
+                <!-- 2. Manajemen Template & Tata Letak Kartu -->
+                <div class="space-y-4 pt-4 border-t border-slate-200">
+                  <h4 class="text-xs font-extrabold uppercase tracking-wider text-emerald-800 bg-emerald-50 px-3 py-1.5 rounded-lg border border-emerald-200 inline-block">
+                    2. Manajemen Template &amp; Tata Letak Kartu
+                  </h4>
+
+                  <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                      <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
+                        Pemilih Template Aktif
+                      </label>
+                      <select id="setting-template-aktif" onchange="previewBackSettingsLive()" class="w-full px-3 py-2.5 rounded-xl border border-slate-300 text-xs font-bold bg-white">
+                        <option value="template_1">Template 1: Standar Kemenag</option>
+                        <option value="template_2">Template 2: Modern Hijau</option>
+                        <option value="template_3">Template 3: Kustom Penuh</option>
+                      </select>
+                    </div>
+
+                    <div>
+                      <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
+                        Opsi Cetak Kartu
+                      </label>
+                      <select id="setting-opsi-cetak" onchange="previewBackSettingsLive()" class="w-full px-3 py-2.5 rounded-xl border border-slate-300 text-xs font-bold bg-white">
+                        <option value="2_sisi">2 Sisi (Depan &amp; Belakang)</option>
+                        <option value="1_sisi">1 Sisi (Depan Saja)</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <!-- Unggah Latar Belakang Kartu (Custom Background) -->
+                  <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
+                    <div class="p-3.5 rounded-2xl bg-slate-50 border border-slate-200 space-y-2">
+                      <div class="flex items-center justify-between">
+                        <label class="text-xs font-bold text-slate-700">Latar Depan Kustom (<code>bg_depan_url</code>)</label>
+                        <button type="button" onclick="clearConfigImage('bg_depan')" class="text-[11px] text-rose-600 font-bold hover:underline">Reset</button>
+                      </div>
+                      <input type="file" id="setting-bg-depan-file" accept=".png,.jpg,.jpeg,image/png,image/jpeg" onchange="handleConfigImageUpload(event, 'bg_depan')" class="w-full text-xs file:mr-2 file:py-1 file:px-2.5 file:rounded-lg file:border-0 file:text-xs file:font-bold file:bg-emerald-100 file:text-emerald-800 text-slate-500">
+                      <input type="text" id="setting-bg-depan-url" placeholder="URL / Base64 Latar Depan (opsional)" oninput="previewBackSettingsLive()" class="w-full px-2.5 py-1.5 rounded-lg border border-slate-200 text-xs font-mono bg-white">
+                    </div>
+
+                    <div class="p-3.5 rounded-2xl bg-slate-50 border border-slate-200 space-y-2">
+                      <div class="flex items-center justify-between">
+                        <label class="text-xs font-bold text-slate-700">Latar Belakang Kustom (<code>bg_belakang_url</code>)</label>
+                        <button type="button" onclick="clearConfigImage('bg_belakang')" class="text-[11px] text-rose-600 font-bold hover:underline">Reset</button>
+                      </div>
+                      <input type="file" id="setting-bg-belakang-file" accept=".png,.jpg,.jpeg,image/png,image/jpeg" onchange="handleConfigImageUpload(event, 'bg_belakang')" class="w-full text-xs file:mr-2 file:py-1 file:px-2.5 file:rounded-lg file:border-0 file:text-xs file:font-bold file:bg-emerald-100 file:text-emerald-800 text-slate-500">
+                      <input type="text" id="setting-bg-belakang-url" placeholder="URL / Base64 Latar Belakang (opsional)" oninput="previewBackSettingsLive()" class="w-full px-2.5 py-1.5 rounded-lg border border-slate-200 text-xs font-mono bg-white">
+                    </div>
+                  </div>
+                </div>
+
+                <div class="pt-4 border-t border-slate-100 flex items-center justify-between gap-3">
+                  <button type="button" onclick="handleResetBackSettingsToDefault()" class="px-4 py-2.5 rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-50 text-xs font-bold transition">
+                    Reset ke Default Kemenag
+                  </button>
+                  <button type="submit" class="px-6 py-3 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-sm shadow-lg transition flex items-center space-x-2">
+                    <i class="fa-solid fa-floppy-disk"></i>
+                    <span>Simpan Pengaturan ke Basis Data</span>
+                  </button>
+                </div>
+              </form>
+            </div>
+
+            <!-- Kanan: Pratinjau Dinamis Sisi Depan & Belakang -->
+            <div class="lg:col-span-5 bg-slate-900 rounded-3xl p-6 text-white shadow-2xl border border-slate-800 flex flex-col items-center">
+              <div class="w-full flex items-center justify-between pb-3 border-b border-slate-800 mb-4">
+                <span class="text-xs font-bold uppercase tracking-wider text-slate-300 flex items-center space-x-2">
+                  <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                  <span>Pratinjau Konfigurasi Kartu</span>
+                </span>
+                <div class="flex space-x-1 bg-slate-800 p-1 rounded-lg">
+                  <button type="button" id="admin-cfg-btn-back" onclick="switchAdminConfigPreview('back')" class="px-2.5 py-1 rounded text-[11px] font-bold bg-emerald-700 text-white">Belakang</button>
+                  <button type="button" id="admin-cfg-btn-front" onclick="switchAdminConfigPreview('front')" class="px-2.5 py-1 rounded text-[11px] font-bold text-slate-400 hover:text-white">Depan</button>
+                </div>
+              </div>
+
+              <!-- Pratinjau Sisi Depan di Panel Pengaturan -->
+              <div id="admin-cfg-card-front" class="kemenag-card kemenag-card-front shadow-2xl scale-95 origin-top hidden">
+                <div class="card-hologram"></div>
+                <div id="admin-cfg-photo-layer" class="kemenag-photo-layer">
+                  <img src="assets/sample_pegawai_setengah_badan.png" alt="Contoh Pegawai" class="kemenag-photo-img">
+                </div>
+                <div class="kemenag-wave-overlay"></div>
+                <div class="kemenag-front-text">
+                  <h3 class="kemenag-front-name">RAHMAT HIDAYAT, S.Kom, M.M.</h3>
+                  <p class="kemenag-front-nip">NIP. 198804122014021003</p>
+                </div>
+              </div>
+
+              <!-- Pratinjau Sisi Belakang di Panel Pengaturan -->
+              <div id="admin-cfg-card-back" class="kemenag-card kemenag-card-back shadow-2xl scale-95 origin-top">
+                <div class="card-hologram"></div>
+                <div class="kemenag-back-content">
+                  <p class="back-text-item back-label-gap uppercase">NAMA</p>
+                  <p class="back-text-item back-section-gap">Rahmat Hidayat, S.Kom, M.M.</p>
+
+                  <p class="back-text-item back-label-gap uppercase">NIP</p>
+                  <p class="back-text-item back-section-gap">198804122014021003</p>
+
+                  <p class="back-text-item back-label-gap uppercase">JABATAN / UNIT KERJA</p>
+                  <p class="back-text-item">Pranata Komputer Ahli Muda</p>
+                  <p class="back-text-item back-section-gap">Sub Bagian Perencanaan, Data &amp; Informasi</p>
+
+                  <p class="back-text-item back-label-gap uppercase">ALAMAT KANTOR</p>
+                  <p id="admin-preview-alamat1" class="back-text-item">Jl. D.I. Panjaitan</p>
+                  <p id="admin-preview-alamat2" class="back-text-item back-section-gap">No. 19 Banjarmasin</p>
+
+                  <p class="back-text-item back-section-gap">Banjarmasin, 19 Oktober 2026</p>
+
+                  <div class="back-signature-block">
+                    <p id="admin-preview-kepala-title" class="back-kepala-title">KEPALA</p>
+                    <img id="admin-preview-ttd-img" src="" alt="TTD" class="back-ttd-img hidden">
+                    <p id="admin-preview-kepala-name" class="back-kepala-name">Dr. H. MUHAMMAD TAMBRIN, M.M.Pd</p>
+                    <p id="admin-preview-kepala-nip" class="back-kepala-nip">NIP. 196705121994031002</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- ============================================================== -->
+        <!-- SUB-TAB 3: MODUL MANAJEMEN AKUN ADMIN (PRD 3.5.3) -->
+        <!-- ============================================================== -->
+        <div id="admin-view-admins" class="admin-subview hidden space-y-6">
+          <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+            
+            <!-- Kolom Kiri: Ganti Password & Tambah Admin Baru -->
+            <div class="lg:col-span-5 space-y-6">
+              
+              <!-- Card 1: Ganti Password Akun Sendiri -->
+              <div class="bg-white rounded-3xl p-6 border border-slate-200 shadow-sm space-y-4">
+                <div class="border-b border-slate-100 pb-3">
+                  <h3 class="text-base font-bold text-slate-900 flex items-center space-x-2">
+                    <i class="fa-solid fa-key text-emerald-700"></i>
+                    <span>Ganti Password Akun Anda</span>
+                  </h3>
+                  <p class="text-xs text-slate-500 mt-0.5">Perbarui kata sandi akun petugas yang sedang Anda gunakan.</p>
+                </div>
+
+                <form onsubmit="handleAdminChangePassword(event)" class="space-y-3">
+                  <div>
+                    <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Password Lama <span class="text-rose-500">*</span></label>
+                    <input type="password" id="admin-change-old-pass" required placeholder="Masukkan password saat ini" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-xs font-semibold">
+                  </div>
+                  <div>
+                    <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Password Baru (Min. 6 Karakter) <span class="text-rose-500">*</span></label>
+                    <input type="password" id="admin-change-new-pass" required minlength="6" placeholder="Masukkan password baru" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-xs font-semibold">
+                  </div>
+                  <button type="submit" class="w-full py-2.5 px-4 rounded-xl bg-slate-900 hover:bg-emerald-900 text-white font-bold text-xs shadow transition flex items-center justify-center space-x-2">
+                    <i class="fa-solid fa-lock"></i>
+                    <span>Perbarui Password Saya</span>
+                  </button>
+                </form>
+              </div>
+
+              <!-- Card 2: Tambah Admin / Operator Baru (Khusus Superadmin) -->
+              <div id="superadmin-add-account-box" class="bg-white rounded-3xl p-6 border border-slate-200 shadow-sm space-y-4">
+                <div class="border-b border-slate-100 pb-3 flex items-center justify-between">
+                  <div>
+                    <h3 class="text-base font-bold text-slate-900 flex items-center space-x-2">
+                      <i class="fa-solid fa-user-shield text-emerald-700"></i>
+                      <span>Tambah Petugas Admin Baru</span>
+                    </h3>
+                    <p class="text-xs text-slate-500 mt-0.5">Tambahkan akun Superadmin atau Operator ke tab <code>Admin</code>.</p>
+                  </div>
+                  <span class="text-[10px] font-extrabold px-2 py-0.5 rounded bg-emerald-100 text-emerald-800 uppercase">Superadmin</span>
+                </div>
+
+                <form onsubmit="handleSuperadminAddAccount(event)" class="space-y-3">
+                  <div>
+                    <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Nama Lengkap Petugas <span class="text-rose-500">*</span></label>
+                    <input type="text" id="new-admin-fullname" required placeholder="Contoh: Budi Santoso, S.Kom" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-xs font-semibold">
+                  </div>
+                  <div class="grid grid-cols-2 gap-3">
+                    <div>
+                      <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Username <span class="text-rose-500">*</span></label>
+                      <input type="text" id="new-admin-username" required placeholder="operator_umum" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-xs font-mono font-bold">
+                    </div>
+                    <div>
+                      <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Role Akses <span class="text-rose-500">*</span></label>
+                      <select id="new-admin-role" class="w-full px-3 py-2.5 rounded-xl border border-slate-300 text-xs font-bold bg-white">
+                        <option value="Operator">Operator</option>
+                        <option value="Superadmin">Superadmin</option>
+                      </select>
+                    </div>
+                  </div>
+                  <div>
+                    <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Password Awal <span class="text-rose-500">*</span></label>
+                    <input type="password" id="new-admin-password" required minlength="6" placeholder="Minimal 6 karakter" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-xs font-semibold">
+                  </div>
+                  <button type="submit" class="w-full py-2.5 px-4 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-xs shadow transition flex items-center justify-center space-x-2">
+                    <i class="fa-solid fa-user-plus"></i>
+                    <span>Tambahkan Akun Petugas</span>
+                  </button>
+                </form>
+              </div>
+
+            </div>
+
+            <!-- Kolom Kanan: Daftar Petugas Admin (Tab 3: Admin) -->
+            <div class="lg:col-span-7 bg-white rounded-3xl p-6 sm:p-8 border border-slate-200 shadow-sm space-y-4">
+              <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+                <div>
+                  <h3 class="text-base font-bold text-slate-900">Daftar Akun Petugas Pengelola (Tab: Admin)</h3>
+                  <p class="text-xs text-slate-500">Cabut akses atau nonaktifkan petugas yang sudah pindah tugas/mutasi.</p>
+                </div>
+                <button type="button" onclick="fetchAdminAccountsFromBackend()" class="px-3 py-1.5 rounded-xl border border-slate-200 text-xs font-bold text-slate-600 hover:bg-slate-50 flex items-center space-x-1.5">
+                  <i class="fa-solid fa-arrows-rotate text-emerald-600"></i>
+                  <span>Segarkan</span>
+                </button>
+              </div>
+
+              <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse">
+                  <thead>
+                    <tr class="bg-slate-50 border-b border-slate-200 text-[11px] font-extrabold uppercase tracking-wider text-slate-500">
+                      <th class="py-3 px-3">ID Admin</th>
+                      <th class="py-3 px-3">Nama Petugas & Username</th>
+                      <th class="py-3 px-3">Role</th>
+                      <th class="py-3 px-3 text-center">Status</th>
+                      <th class="py-3 px-3 text-center">Aksi</th>
+                    </tr>
+                  </thead>
+                  <tbody id="admin-accounts-table-body" class="divide-y divide-slate-100 text-xs">
+                    <!-- Diisi oleh renderAdminAccountsTable() -->
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- ============================================================== -->
+        <!-- SUB-TAB 4: KELOLA DROPDOWN UNIT KERJA -->
+        <!-- ============================================================== -->
+        <div id="admin-view-units" class="admin-subview hidden space-y-6">
+          <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+            <div class="lg:col-span-5 bg-white rounded-3xl p-6 sm:p-8 border border-slate-200 shadow-sm space-y-5">
+              <div class="border-b border-slate-100 pb-3">
+                <h3 class="text-base font-bold text-slate-900">Tambah Pilihan Unit Kerja / Bidang</h3>
+                <p class="text-xs text-slate-500 mt-1">Unit kerja baru akan langsung tampil pada pilihan formulir pengajuan.</p>
               </div>
 
               <form onsubmit="handleAdminAddUnit(event)" class="space-y-4">
@@ -1197,150 +1350,34 @@
                   <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
                     Nama Unit Kerja / Bidang <span class="text-rose-500">*</span>
                   </label>
-                  <input type="text" id="admin-new-unit-input" required placeholder="Contoh: Bidang Zakat & Wakaf" class="w-full px-4 py-3 rounded-xl border border-slate-300 focus:ring-2 focus:ring-emerald-600 text-sm font-semibold">
+                  <input type="text" id="admin-new-unit-input" required placeholder="Contoh: Bidang Penyelenggaraan Haji dan Umrah" class="w-full px-4 py-3 rounded-xl border border-slate-300 focus:ring-2 focus:ring-emerald-600 text-sm font-semibold">
                 </div>
 
                 <button type="submit" class="w-full py-3 px-4 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-sm shadow transition flex items-center justify-center space-x-2">
                   <i class="fa-solid fa-floppy-disk"></i>
-                  <span>Tambahkan ke Dropdown</span>
+                  <span>Tambahkan Unit Kerja</span>
                 </button>
               </form>
 
               <div class="pt-4 border-t border-slate-100 flex items-center justify-between">
-                <span class="text-xs text-slate-500">Standar Bawaan Kemenag:</span>
-                <button type="button" onclick="handleResetUnitsToDefault()" class="text-xs font-bold text-emerald-700 hover:text-emerald-800 hover:underline">
-                  Reset 14 Unit Kerja Default
+                <span class="text-xs text-slate-500">Standar Bawaan:</span>
+                <button type="button" onclick="handleResetUnitsToDefault()" class="text-xs font-bold text-emerald-700 hover:underline">
+                  Reset Daftar Unit Default
                 </button>
               </div>
             </div>
 
-            <!-- Right: List of Active Units -->
             <div class="lg:col-span-7 bg-white rounded-3xl p-6 sm:p-8 border border-slate-200 shadow-sm space-y-4">
               <div class="flex items-center justify-between pb-3 border-b border-slate-100">
                 <div>
-                  <h3 class="text-base font-bold text-slate-900">Daftar Pilihan Unit Kerja Aktif</h3>
-                  <p class="text-xs text-slate-500">Unit kerja yang saat ini tersedia bagi pemohon.</p>
+                  <h3 class="text-base font-bold text-slate-900">Daftar Unit Kerja Aktif</h3>
+                  <p class="text-xs text-slate-500">Pilihan unit kerja yang tersedia di formulir.</p>
                 </div>
-                <span id="admin-total-units-pill" class="px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800 font-mono">14 Unit</span>
+                <span id="admin-total-units-pill" class="px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800 font-mono">15 Unit</span>
               </div>
 
-              <div id="admin-units-list" class="divide-y divide-slate-100 max-h-[500px] overflow-y-auto pr-1 space-y-1">
-                <!-- Dynamically populated via JS -->
-              </div>
+              <div id="admin-units-list" class="divide-y divide-slate-100 max-h-[500px] overflow-y-auto pr-1 space-y-1"></div>
             </div>
-
-          </div>
-        </div>
-
-        <!-- ======================================================== -->
-        <!-- SUB-TAB 3: PENGATURAN TAMPAK BELAKANG (KEPALA & NIP) -->
-        <!-- ======================================================== -->
-        <div id="admin-view-template" class="admin-subview hidden space-y-6">
-          <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-            
-            <!-- Left: Settings Form -->
-            <div class="lg:col-span-7 bg-white rounded-3xl p-6 sm:p-8 border border-slate-200 shadow-sm space-y-5">
-              <div class="border-b border-slate-100 pb-3">
-                <h3 class="text-base font-bold text-slate-900 flex items-center space-x-2">
-                  <span class="w-6 h-6 rounded-full bg-emerald-100 text-emerald-800 text-xs font-bold flex items-center justify-center">
-                    <i class="fa-solid fa-signature text-[10px]"></i>
-                  </span>
-                  <span>Pengaturan Informasi Tampak Belakang Kartu</span>
-                </h3>
-                <p class="text-xs text-slate-500 mt-1">
-                  Atur nama pejabat penandatangan, NIP Kepala Kanwil, dan alamat kantor. Data ini akan otomatis tercetak di bagian belakang setiap kartu ID pegawai.
-                </p>
-              </div>
-
-              <form onsubmit="handleSaveBackSettings(event)" class="space-y-4">
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div class="sm:col-span-2">
-                    <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
-                      Nama Kepala Kantor Wilayah <span class="text-rose-500">*</span>
-                    </label>
-                    <input type="text" id="setting-kepala-name" required placeholder="Contoh: Dr. H. MUHAMMAD TAMBRIN, M.M.Pd" oninput="previewBackSettingsLive()" class="w-full px-4 py-2.5 rounded-xl border border-slate-300 focus:ring-2 focus:ring-emerald-600 text-sm font-bold">
-                    <p class="text-[11px] text-slate-400 mt-0.5">Nama lengkap beserta gelar akademik/keagamaan resmi.</p>
-                  </div>
-
-                  <div>
-                    <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
-                      NIP Kepala Kanwil <span class="text-rose-500">*</span>
-                    </label>
-                    <input type="text" id="setting-kepala-nip" required placeholder="Contoh: 196912181996031003" oninput="previewBackSettingsLive()" class="w-full px-4 py-2.5 rounded-xl border border-slate-300 focus:ring-2 focus:ring-emerald-600 text-sm font-mono font-bold">
-                  </div>
-
-                  <div>
-                    <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
-                      Jabatan Penandatangan <span class="text-rose-500">*</span>
-                    </label>
-                    <input type="text" id="setting-kepala-title" required placeholder="Contoh: KEPALA" oninput="previewBackSettingsLive()" class="w-full px-4 py-2.5 rounded-xl border border-slate-300 focus:ring-2 focus:ring-emerald-600 text-sm font-bold">
-                  </div>
-
-                  <div>
-                    <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
-                      Alamat Kantor (Baris 1) <span class="text-rose-500">*</span>
-                    </label>
-                    <input type="text" id="setting-alamat-1" required placeholder="Contoh: Jl. D.I. Panjaitan" oninput="previewBackSettingsLive()" class="w-full px-4 py-2.5 rounded-xl border border-slate-300 focus:ring-2 focus:ring-emerald-600 text-sm font-semibold">
-                  </div>
-
-                  <div>
-                    <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
-                      Alamat Kantor (Baris 2) <span class="text-rose-500">*</span>
-                    </label>
-                    <input type="text" id="setting-alamat-2" required placeholder="Contoh: No. 19 Banjarmasin" oninput="previewBackSettingsLive()" class="w-full px-4 py-2.5 rounded-xl border border-slate-300 focus:ring-2 focus:ring-emerald-600 text-sm font-semibold">
-                  </div>
-                </div>
-
-                <div class="pt-4 border-t border-slate-100 flex items-center justify-between gap-3">
-                  <button type="button" onclick="handleResetBackSettingsToDefault()" class="px-4 py-2.5 rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-50 text-xs font-bold transition">
-                    Reset ke Standar Resmi
-                  </button>
-                  <button type="submit" class="px-6 py-2.5 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-sm shadow transition flex items-center space-x-2">
-                    <i class="fa-solid fa-floppy-disk"></i>
-                    <span>Simpan Pengaturan Template</span>
-                  </button>
-                </div>
-              </form>
-            </div>
-
-            <!-- Right: Live Mini Card Back Preview -->
-            <div class="lg:col-span-5 bg-slate-900 rounded-3xl p-6 text-white shadow-2xl border border-slate-800 flex flex-col items-center">
-              <div class="w-full flex items-center justify-between pb-3 border-b border-slate-800 mb-4">
-                <span class="text-xs font-bold uppercase tracking-wider text-slate-300 flex items-center space-x-2">
-                  <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-                  <span>Pratinjau Hasil Tampak Belakang</span>
-                </span>
-                <span class="text-[10px] font-mono bg-slate-800 px-2 py-0.5 rounded text-slate-400">CR-80 PVC</span>
-              </div>
-
-              <!-- Card Back Box -->
-              <div class="kemenag-card kemenag-card-back shadow-2xl scale-95 origin-top">
-                <div class="card-hologram"></div>
-                <div class="kemenag-back-content">
-                  <p class="back-text-item back-label-gap uppercase">NAMA</p>
-                  <p class="back-text-item back-section-gap font-bold">Rahmat Hidayat, S.Kom, M.M.</p>
-
-                  <p class="back-text-item back-label-gap uppercase">NIP</p>
-                  <p class="back-text-item back-section-gap font-mono">198804122014021003</p>
-
-                  <p class="back-text-item back-label-gap uppercase">JABATAN</p>
-                  <p class="back-text-item">Pranata Komputer Ahli Muda</p>
-                  <p class="back-text-item back-section-gap">Sub Bagian Perencanaan, Data & Informasi</p>
-
-                  <p class="back-text-item back-label-gap uppercase">ALAMAT KANTOR</p>
-                  <p id="admin-preview-alamat1" class="back-text-item">Jl. D.I. Panjaitan</p>
-                  <p id="admin-preview-alamat2" class="back-text-item back-section-gap">No. 19 Banjarmasin</p>
-
-                  <p class="back-text-item back-section-gap">Banjarmasin, 14 Oktober 2026</p>
-
-                  <!-- Dynamic Kepala on Mini Preview -->
-                  <p id="admin-preview-kepala-title" class="back-kepala-title">KEPALA</p>
-                  <p id="admin-preview-kepala-name" class="back-kepala-name">Dr. H. MUHAMMAD TAMBRIN, M.M.Pd</p>
-                  <p id="admin-preview-kepala-nip" class="back-kepala-nip">NIP. 196912181996031003</p>
-                </div>
-              </div>
-            </div>
-
           </div>
         </div>
 
@@ -1356,48 +1393,40 @@
         <div class="flex items-center space-x-3">
           <img src="assets/logo_kemenag.png" alt="Logo Kemenag" class="w-8 h-8 object-contain">
           <div>
-            <span class="font-bold text-slate-800 text-sm">Kantor Wilayah Kementerian Agama Provinsi Kalimantan Selatan</span>
+            <span class="font-bold text-slate-800 text-sm">CetakID Kemenag – Kanwil Kementerian Agama Provinsi Kalimantan Selatan</span>
             <p class="text-xs text-slate-500">Jl. D.I. Panjaitan No. 19 Banjarmasin</p>
           </div>
         </div>
         <div class="text-xs text-slate-500">
-          Standar CR-80 (54 x 85.6 mm) &bull; &copy; 2026 Hak Cipta Dilindungi
+          Standar CR80 (54 x 85.6 mm) &bull; &copy; 2026 Kanwil Kemenag Prov. Kalsel
         </div>
       </div>
     </div>
   </footer>
 
-
   <!-- ======================================================== -->
-  <!-- MODAL: REGISTRASI SUKSES -->
+  <!-- MODAL: PENGAJUAN BERHASIL (NOMOR TIKET KMN-2026-XXXX) -->
   <!-- ======================================================== -->
   <div id="modal-success" class="fixed inset-0 z-50 bg-slate-900/70 backdrop-blur-sm flex items-center justify-center p-4 hidden">
     <div class="bg-white rounded-3xl max-w-md w-full p-6 sm:p-8 text-center shadow-2xl border border-slate-200">
-      <div class="w-20 h-20 rounded-3xl bg-emerald-100 text-emerald-700 flex items-center justify-center text-3xl mx-auto mb-5 shadow-lg shadow-emerald-600/20">
+      <div class="w-16 h-16 rounded-2xl bg-emerald-100 text-emerald-700 flex items-center justify-center text-2xl mx-auto mb-4">
         <i class="fa-solid fa-check"></i>
       </div>
-
       <span class="text-xs font-bold text-emerald-700 bg-emerald-50 px-3 py-1 rounded-full uppercase tracking-wider">
-        Permintaan Berhasil Dikirim
+        Pengajuan Berhasil Diterima
       </span>
-
-      <h3 class="text-2xl font-black text-slate-900 mt-3 mb-2">
-        Pendaftaran Berhasil!
-      </h3>
-
-      <p class="text-slate-600 text-sm mb-6 leading-relaxed">
-        Data permohonan ID Card Anda telah tersimpan dan masuk ke antrean <strong>Dashboard Status</strong>.
+      <h3 class="text-2xl font-black text-slate-900 mt-3 mb-2">Tiket Antrean Diterbitkan</h3>
+      <p class="text-slate-600 text-xs sm:text-sm mb-5">
+        Simpan Nomor Tiket di bawah ini untuk memantau status pencetakan kartu identitas Anda di Dashboard Status.
       </p>
-
       <div class="bg-emerald-50 border-2 border-dashed border-emerald-300 rounded-2xl p-4 mb-6">
-        <p class="text-xs text-slate-500 font-semibold mb-1">Nomor Registrasi Anda:</p>
+        <p class="text-xs text-slate-500 font-semibold mb-1">Nomor Tiket Pengajuan:</p>
         <p id="success-reg-id" class="text-2xl font-black font-mono text-emerald-800 tracking-wider">KMN-2026-XXXX</p>
       </div>
-
       <div class="space-y-2">
         <button onclick="goToDashboardWithFilter()" class="w-full py-3.5 px-4 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-sm shadow-md transition flex items-center justify-center space-x-2">
-          <i class="fa-solid fa-chart-pie"></i>
-          <span>Lihat di Dashboard Status</span>
+          <i class="fa-solid fa-table-list"></i>
+          <span>Pantau di Dashboard Status</span>
         </button>
         <button onclick="closeSuccessModal()" class="w-full py-2.5 px-4 rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-50 font-semibold text-xs transition">
           Tutup
@@ -1406,17 +1435,15 @@
     </div>
   </div>
 
-
   <!-- ======================================================== -->
-  <!-- MODAL: CARI NIP / RESI CEPAT (PELACAKAN AUDIENS) -->
+  <!-- MODAL: CEK STATUS NIP / NOMOR TIKET CEPAT -->
   <!-- ======================================================== -->
   <div id="modal-quick-track" class="fixed inset-0 z-50 bg-slate-900/70 backdrop-blur-sm flex items-center justify-center p-4 hidden">
     <div class="bg-white rounded-3xl max-w-md w-full p-6 sm:p-7 shadow-2xl border border-slate-200">
-      
       <div class="flex items-center justify-between pb-3 border-b border-slate-100 mb-4">
         <h4 class="font-bold text-base text-slate-900 flex items-center space-x-2">
           <i class="fa-solid fa-magnifying-glass text-emerald-600"></i>
-          <span>Cari Status ID Card Pegawai</span>
+          <span>Cek Status NIP / Nomor Tiket</span>
         </h4>
         <button onclick="closeQuickTrackModal()" class="text-slate-400 hover:text-slate-700">
           <i class="fa-solid fa-xmark text-lg"></i>
@@ -1425,12 +1452,11 @@
 
       <form onsubmit="handleQuickTrackSubmit(event)" class="space-y-4">
         <div>
-          <label class="block text-xs font-bold text-slate-600 mb-1">Masukkan NIP atau Nomor Registrasi:</label>
-          <input type="text" id="quick-track-input" placeholder="Contoh: 198804122014021003" required class="w-full px-4 py-3 rounded-xl border border-slate-300 font-mono text-sm font-bold text-center tracking-wider uppercase focus:ring-2 focus:ring-emerald-600">
+          <label class="block text-xs font-bold text-slate-600 mb-1">Masukkan NIP (18 Digit) atau Nomor Tiket:</label>
+          <input type="text" id="quick-track-input" placeholder="Contoh: 198804122014021003 atau KMN-2026-7846" required class="w-full px-4 py-3 rounded-xl border border-slate-300 font-mono text-sm font-bold text-center tracking-wider uppercase focus:ring-2 focus:ring-emerald-600">
         </div>
-
         <button type="submit" class="w-full py-3 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-sm shadow transition">
-          Periksa Status
+          Periksa Status Sekarang
         </button>
       </form>
 
@@ -1439,19 +1465,18 @@
   </div>
 
   <!-- ======================================================== -->
-  <!-- MODAL: LOGIN ADMIN / PETUGAS -->
+  <!-- MODAL: LOGIN ADMIN (VERIFIKASI BACKEND APPS SCRIPT - TANPA HARDCODE SANDI) -->
   <!-- ======================================================== -->
   <div id="modal-admin-login" class="fixed inset-0 z-50 bg-slate-900/70 backdrop-blur-sm flex items-center justify-center p-4 hidden">
     <div class="bg-white rounded-3xl max-w-md w-full p-6 sm:p-8 shadow-2xl border border-slate-200">
-      
       <div class="flex items-center justify-between pb-3 border-b border-slate-100 mb-5">
         <div class="flex items-center space-x-3">
           <div class="w-10 h-10 rounded-2xl bg-emerald-100 text-emerald-800 flex items-center justify-center text-lg shadow-sm">
-            <i class="fa-solid fa-lock"></i>
+            <i class="fa-solid fa-user-shield"></i>
           </div>
           <div>
             <h4 class="font-bold text-base text-slate-900">Login Panel Admin</h4>
-            <p class="text-xs text-slate-500">Petugas Cetak ID Card Kanwil</p>
+            <p class="text-xs text-slate-500">Autentikasi Petugas CetakID Kemenag</p>
           </div>
         </div>
         <button onclick="closeAdminLoginModal()" class="text-slate-400 hover:text-slate-700 transition">
@@ -1459,45 +1484,40 @@
         </button>
       </div>
 
-      <!-- Error Box -->
       <div id="admin-login-error" class="hidden mb-4 p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 text-xs flex items-center space-x-2">
         <i class="fa-solid fa-circle-exclamation text-rose-600 flex-shrink-0 text-sm"></i>
-        <span id="admin-login-error-text">Username atau password salah!</span>
+        <span id="admin-login-error-text">Username atau kata sandi tidak valid!</span>
       </div>
 
       <form onsubmit="handleAdminLoginSubmit(event)" class="space-y-4">
         <div>
-          <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
-            Username
-          </label>
+          <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Username Petugas</label>
           <div class="relative">
             <i class="fa-solid fa-user absolute left-3.5 top-3.5 text-slate-400 text-sm"></i>
-            <input type="text" id="admin-login-username" required placeholder="admin" autocomplete="username" class="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-300 focus:ring-2 focus:ring-emerald-600 text-sm font-semibold">
+            <input type="text" id="admin-login-username" required placeholder="Masukkan username petugas" autocomplete="username" class="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-300 focus:ring-2 focus:ring-emerald-600 text-sm font-semibold">
           </div>
         </div>
 
         <div>
-          <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
-            Password
-          </label>
+          <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Kata Sandi (Password)</label>
           <div class="relative">
             <i class="fa-solid fa-key absolute left-3.5 top-3.5 text-slate-400 text-sm"></i>
-            <input type="password" id="admin-login-password" required placeholder="•••••" autocomplete="current-password" class="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-300 focus:ring-2 focus:ring-emerald-600 text-sm font-semibold">
+            <input type="password" id="admin-login-password" required placeholder="Masukkan kata sandi" autocomplete="current-password" class="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-300 focus:ring-2 focus:ring-emerald-600 text-sm font-semibold">
           </div>
         </div>
 
-        <div class="p-3 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-[11px] flex items-center space-x-2">
-          <i class="fa-solid fa-circle-info text-emerald-600 flex-shrink-0"></i>
-          <span>Kredensial Default: <strong>admin</strong> / <strong>admin</strong></span>
+        <div class="p-3 rounded-xl bg-slate-50 border border-slate-200 text-slate-600 text-[11px] flex items-center space-x-2">
+          <i class="fa-solid fa-shield-halved text-emerald-600 flex-shrink-0"></i>
+          <span>Kredensial diverifikasi melalui basis data tab <strong>Admin</strong> pada Google Sheets.</span>
         </div>
 
         <div class="pt-2 flex items-center space-x-3">
           <button type="button" onclick="closeAdminLoginModal()" class="w-1/2 py-3 px-4 rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-50 font-semibold text-xs transition">
             Batal
           </button>
-          <button type="submit" class="w-1/2 py-3 px-4 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-sm shadow transition flex items-center justify-center space-x-2">
+          <button type="submit" id="btn-submit-admin-login" class="w-1/2 py-3 px-4 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-sm shadow transition flex items-center justify-center space-x-2">
             <i class="fa-solid fa-right-to-bracket"></i>
-            <span>Masuk Admin</span>
+            <span id="btn-submit-admin-login-text">Masuk Admin</span>
           </button>
         </div>
       </form>
@@ -1505,18 +1525,17 @@
   </div>
 
   <!-- ======================================================== -->
-  <!-- MODAL: ADMIN EDIT DATA PERMINTAAN PEGAWAI -->
+  <!-- MODAL: EDIT BIODATA PEGAWAI (PRD 3.3.1) -->
   <!-- ======================================================== -->
   <div id="modal-admin-edit" class="fixed inset-0 z-50 bg-slate-900/70 backdrop-blur-sm flex items-center justify-center p-4 hidden">
     <div class="bg-white rounded-3xl max-w-2xl w-full p-6 sm:p-8 shadow-2xl border border-slate-200 max-h-[90vh] overflow-y-auto">
-      
       <div class="flex items-center justify-between pb-3 border-b border-slate-100 mb-5">
         <div class="flex items-center space-x-3">
           <div class="w-10 h-10 rounded-2xl bg-amber-100 text-amber-800 flex items-center justify-center text-lg">
             <i class="fa-solid fa-user-pen"></i>
           </div>
           <div>
-            <h4 class="font-bold text-base text-slate-900">Edit Data Permohonan Pegawai</h4>
+            <h4 class="font-bold text-base text-slate-900">Edit Biodata & Pasfoto Pegawai</h4>
             <p id="admin-edit-badge-id" class="text-xs text-slate-500 font-mono font-bold">KMN-2026-XXXX</p>
           </div>
         </div>
@@ -1529,45 +1548,45 @@
         <input type="hidden" id="admin-edit-id">
 
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <!-- Nama Lengkap -->
           <div class="sm:col-span-2">
             <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
-              Nama Lengkap dengan Gelar <span class="text-rose-500">*</span>
+              Nama Lengkap & Gelar <span class="text-rose-500">*</span>
             </label>
             <input type="text" id="admin-edit-name" required class="w-full px-4 py-2.5 rounded-xl border border-slate-300 focus:ring-2 focus:ring-emerald-600 text-sm font-semibold">
           </div>
 
-          <!-- NIP -->
           <div>
             <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
-              NIP (18 Digit Angka) <span class="text-rose-500">*</span>
+              NIP (Wajib 18 Digit Angka) <span class="text-rose-500">*</span>
             </label>
-            <input type="text" id="admin-edit-nip" required maxlength="18" inputmode="numeric" onkeypress="return isNumberKey(event)" oninput="this.value = this.value.replace(/\D/g, '')" class="w-full px-4 py-2.5 rounded-xl border border-slate-300 focus:ring-2 focus:ring-emerald-600 text-sm font-mono font-bold">
+            <input type="text" id="admin-edit-nip" required maxlength="18" inputmode="numeric" oninput="this.value = this.value.replace(/\D/g, '')" class="w-full px-4 py-2.5 rounded-xl border border-slate-300 focus:ring-2 focus:ring-emerald-600 text-sm font-mono font-bold">
           </div>
 
-          <!-- Status Pengerjaan -->
           <div>
             <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
-              Status Pengerjaan <span class="text-rose-500">*</span>
+              Nomor HP / WhatsApp <span class="text-rose-500">*</span>
+            </label>
+            <input type="tel" id="admin-edit-phone" required maxlength="16" inputmode="numeric" oninput="this.value = this.value.replace(/\D/g, '')" placeholder="Contoh: 081234567890" class="w-full px-4 py-2.5 rounded-xl border border-slate-300 focus:ring-2 focus:ring-emerald-600 text-sm font-mono font-bold">
+          </div>
+
+          <div class="sm:col-span-2">
+            <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
+              Status Cetak <span class="text-rose-500">*</span>
             </label>
             <select id="admin-edit-status" required class="w-full px-4 py-2.5 rounded-xl border border-slate-300 focus:ring-2 focus:ring-emerald-600 text-sm font-bold">
-              <option value="Menunggu Verifikasi">Belum Dikerjakan (Menunggu Verifikasi)</option>
-              <option value="Sedang Dicetak">Sedang Dikerjakan (Sedang Dicetak)</option>
-              <option value="Selesai">Sudah Selesai (Selesai)</option>
+              <option value="Menunggu Verifikasi">Menunggu Verifikasi</option>
+              <option value="Sedang Dicetak">Sedang Dicetak</option>
+              <option value="Selesai">Selesai</option>
             </select>
           </div>
 
-          <!-- Unit Kerja / Bidang -->
           <div class="sm:col-span-2">
             <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
               Unit Kerja / Bidang <span class="text-rose-500">*</span>
             </label>
-            <select id="admin-edit-bidang" required class="w-full px-4 py-2.5 rounded-xl border border-slate-300 focus:ring-2 focus:ring-emerald-600 text-sm font-medium">
-              <!-- Populated dynamically via JS -->
-            </select>
+            <select id="admin-edit-bidang" required class="w-full px-4 py-2.5 rounded-xl border border-slate-300 focus:ring-2 focus:ring-emerald-600 text-sm font-medium"></select>
           </div>
 
-          <!-- Jabatan -->
           <div class="sm:col-span-2">
             <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
               Jabatan <span class="text-rose-500">*</span>
@@ -1575,7 +1594,6 @@
             <input type="text" id="admin-edit-jabatan" required class="w-full px-4 py-2.5 rounded-xl border border-slate-300 focus:ring-2 focus:ring-emerald-600 text-sm font-semibold">
           </div>
 
-          <!-- Tanggal Pengajuan -->
           <div>
             <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
               Tanggal Pengajuan
@@ -1583,18 +1601,14 @@
             <input type="date" id="admin-edit-date" class="w-full px-4 py-2.5 rounded-xl border border-slate-300 focus:ring-2 focus:ring-emerald-600 text-sm font-semibold">
           </div>
 
-          <!-- Foto Preview & Ganti Foto -->
           <div>
             <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
-              Foto Pegawai
+              Ganti Pasfoto (.JPG/.PNG Maks 2 MB)
             </label>
             <div class="flex items-center space-x-3">
-              <div id="admin-edit-photo-container" class="w-12 h-12 rounded-xl bg-slate-100 border border-slate-200 overflow-hidden flex items-center justify-center flex-shrink-0">
-                <img id="admin-edit-photo-preview" src="" alt="Foto" class="w-full h-full object-contain">
-              </div>
+              <img id="admin-edit-photo-preview" src="assets/default-avatar.png" alt="Foto" class="avatar-table-thumb">
               <div class="flex-1">
-                <input type="file" id="admin-edit-photo-file" accept="image/png, image/jpeg" class="text-xs file:mr-2 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-bold file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100 text-slate-500">
-                <p class="text-[10px] text-slate-400 mt-0.5">Biarkan kosong jika tidak ingin mengganti foto.</p>
+                <input type="file" id="admin-edit-photo-file" accept=".jpg,.jpeg,.png,image/jpeg,image/png" class="text-xs file:mr-2 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-bold file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100 text-slate-500">
               </div>
             </div>
           </div>
@@ -1614,19 +1628,18 @@
   </div>
 
   <!-- ======================================================== -->
-  <!-- MODAL: ADMIN TAMBAH PERMOHONAN PEGAWAI MANUAL -->
+  <!-- MODAL: ADMIN TAMBAH PENGAJUAN BARU -->
   <!-- ======================================================== -->
   <div id="modal-admin-add" class="fixed inset-0 z-50 bg-slate-900/70 backdrop-blur-sm flex items-center justify-center p-4 hidden">
     <div class="bg-white rounded-3xl max-w-2xl w-full p-6 sm:p-8 shadow-2xl border border-slate-200 max-h-[90vh] overflow-y-auto">
-      
       <div class="flex items-center justify-between pb-3 border-b border-slate-100 mb-5">
         <div class="flex items-center space-x-3">
           <div class="w-10 h-10 rounded-2xl bg-emerald-100 text-emerald-800 flex items-center justify-center text-lg">
             <i class="fa-solid fa-user-plus"></i>
           </div>
           <div>
-            <h4 class="font-bold text-base text-slate-900">Tambah Permohonan Pegawai Manual</h4>
-            <p class="text-xs text-slate-500">Input langsung data pegawai ke antrean cetak ID Card</p>
+            <h4 class="font-bold text-base text-slate-900">Tambah Pengajuan Pegawai Baru</h4>
+            <p class="text-xs text-slate-500">Input langsung ke antrean cetak ID Card</p>
           </div>
         </div>
         <button onclick="closeAdminAddEmployeeModal()" class="text-slate-400 hover:text-slate-700 transition">
@@ -1636,59 +1649,58 @@
 
       <form onsubmit="handleAdminSubmitNewEmployee(event)" class="space-y-4">
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <!-- Nama Lengkap -->
           <div class="sm:col-span-2">
             <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
-              Nama Lengkap dengan Gelar <span class="text-rose-500">*</span>
+              Nama Lengkap &amp; Gelar <span class="text-rose-500">*</span>
             </label>
-            <input type="text" id="admin-add-name" required placeholder="Contoh: Rahmat Hidayat, S.Kom, M.M." class="w-full px-4 py-2.5 rounded-xl border border-slate-300 focus:ring-2 focus:ring-emerald-600 text-sm font-semibold">
+            <input type="text" id="admin-add-name" required placeholder="Contoh: Rahmat Hidayat, S.Kom, M.M." class="w-full px-4 py-2.5 rounded-xl border border-slate-300 text-sm font-semibold">
           </div>
 
-          <!-- NIP -->
           <div>
             <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
               NIP (18 Digit Angka) <span class="text-rose-500">*</span>
             </label>
-            <input type="text" id="admin-add-nip" required maxlength="18" inputmode="numeric" onkeypress="return isNumberKey(event)" oninput="this.value = this.value.replace(/\D/g, '')" placeholder="198804122014021003" class="w-full px-4 py-2.5 rounded-xl border border-slate-300 focus:ring-2 focus:ring-emerald-600 text-sm font-mono font-bold">
+            <input type="text" id="admin-add-nip" required maxlength="18" inputmode="numeric" oninput="this.value = this.value.replace(/\D/g, '')" placeholder="198804122014021003" class="w-full px-4 py-2.5 rounded-xl border border-slate-300 text-sm font-mono font-bold">
           </div>
 
-          <!-- Status Pengerjaan -->
           <div>
             <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
-              Status Permintaan <span class="text-rose-500">*</span>
+              Nomor HP / WhatsApp <span class="text-rose-500">*</span>
             </label>
-            <select id="admin-add-status" required class="w-full px-4 py-2.5 rounded-xl border border-slate-300 focus:ring-2 focus:ring-emerald-600 text-sm font-bold">
-              <option value="Menunggu Verifikasi">Belum Dikerjakan (Menunggu Verifikasi)</option>
-              <option value="Sedang Dicetak" selected>Sedang Dikerjakan (Sedang Dicetak)</option>
-              <option value="Selesai">Sudah Selesai (Selesai)</option>
+            <input type="tel" id="admin-add-phone" required maxlength="16" inputmode="numeric" oninput="this.value = this.value.replace(/\D/g, '')" placeholder="Contoh: 081234567890" class="w-full px-4 py-2.5 rounded-xl border border-slate-300 text-sm font-mono font-bold">
+          </div>
+
+          <div class="sm:col-span-2">
+            <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
+              Status Cetak <span class="text-rose-500">*</span>
+            </label>
+            <select id="admin-add-status" required class="w-full px-4 py-2.5 rounded-xl border border-slate-300 text-sm font-bold">
+              <option value="Menunggu Verifikasi">Menunggu Verifikasi</option>
+              <option value="Sedang Dicetak" selected>Sedang Dicetak</option>
+              <option value="Selesai">Selesai</option>
             </select>
           </div>
 
-          <!-- Unit Kerja / Bidang -->
           <div class="sm:col-span-2">
             <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
               Unit Kerja / Bidang <span class="text-rose-500">*</span>
             </label>
-            <select id="admin-add-bidang" required class="w-full px-4 py-2.5 rounded-xl border border-slate-300 focus:ring-2 focus:ring-emerald-600 text-sm font-medium">
-              <!-- Populated dynamically via JS -->
-            </select>
+            <select id="admin-add-bidang" required class="w-full px-4 py-2.5 rounded-xl border border-slate-300 text-sm font-medium"></select>
           </div>
 
-          <!-- Jabatan -->
           <div class="sm:col-span-2">
             <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
               Jabatan <span class="text-rose-500">*</span>
             </label>
-            <input type="text" id="admin-add-jabatan" required placeholder="Contoh: Pranata Komputer Ahli Muda" class="w-full px-4 py-2.5 rounded-xl border border-slate-300 focus:ring-2 focus:ring-emerald-600 text-sm font-semibold">
+            <input type="text" id="admin-add-jabatan" required placeholder="Contoh: Pranata Komputer Ahli Muda" class="w-full px-4 py-2.5 rounded-xl border border-slate-300 text-sm font-semibold">
           </div>
 
-          <!-- Unggah Foto -->
           <div class="sm:col-span-2">
             <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
-              Unggah Foto Setengah Badan (Opsional)
+              Unggah Pasfoto (.JPG, .JPEG, .PNG Maks 2 MB)
             </label>
-            <input type="file" id="admin-add-photo-file" accept="image/png, image/jpeg" class="w-full text-xs file:mr-2 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100 text-slate-500 border border-slate-300 rounded-xl p-1.5">
-            <p class="text-[10px] text-slate-400 mt-1">Jika belum ada foto, sistem akan menandai untuk pengambilan foto di Bagian Umum.</p>
+            <input type="file" id="admin-add-photo-file" accept=".jpg,.jpeg,.png,image/jpeg,image/png" class="w-full text-xs file:mr-2 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100 text-slate-500 border border-slate-300 rounded-xl p-1.5">
+            <p class="text-[10px] text-slate-400 mt-1">Jika dikosongkan, sistem menggunakan foto sampel pegawai transparan default.</p>
           </div>
         </div>
 
@@ -1698,7 +1710,7 @@
           </button>
           <button type="submit" class="py-2.5 px-6 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-sm shadow transition flex items-center space-x-2">
             <i class="fa-solid fa-plus"></i>
-            <span>Tambahkan Permintaan</span>
+            <span>Simpan Pengajuan</span>
           </button>
         </div>
       </form>
@@ -1706,40 +1718,44 @@
   </div>
 
   <!-- ======================================================== -->
-  <!-- MODAL: ADMIN CETAK / PRATINJAU DUA SISI ID CARD -->
+  <!-- MODAL: LAYOUT CETAK KARTU CR80 (1 SISI / 2 SISI) (PRD 3.3.3 & 3.4.2) -->
   <!-- ======================================================== -->
   <div id="modal-admin-print" class="fixed inset-0 z-50 bg-slate-900/80 backdrop-blur-sm flex items-center justify-center p-4 hidden">
     <div class="bg-white rounded-3xl max-w-4xl w-full p-6 sm:p-8 shadow-2xl border border-slate-200 max-h-[92vh] overflow-y-auto">
-      
-      <div class="flex items-center justify-between pb-3 border-b border-slate-100 mb-5">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-100 mb-5">
         <div class="flex items-center space-x-3">
           <div class="w-10 h-10 rounded-2xl bg-emerald-100 text-emerald-800 flex items-center justify-center text-lg">
             <i class="fa-solid fa-print"></i>
           </div>
           <div>
-            <h4 class="font-bold text-base text-slate-900">Pratinjau & Cetak ID Card Pegawai</h4>
-            <p id="admin-print-meta-info" class="text-xs text-slate-500 font-medium">Standar CR-80 PVC (54 x 85.6 mm)</p>
+            <h4 class="font-bold text-base text-slate-900">Layout Cetak Kartu Identitas (Standar CR80)</h4>
+            <p id="admin-print-meta-info" class="text-xs text-slate-500 font-medium">Menggabungkan Biodata Pegawai + Konfigurasi Pimpinan &amp; Template Aktif</p>
           </div>
         </div>
-        <button onclick="closeAdminPrintModal()" class="text-slate-400 hover:text-slate-700 transition">
-          <i class="fa-solid fa-xmark text-lg"></i>
-        </button>
+
+        <div class="flex items-center space-x-2">
+          <label class="text-xs font-bold text-slate-600">Mode Cetak:</label>
+          <select id="print-modal-side-selector" onchange="handlePrintModalSideChange(this.value)" class="px-3 py-1.5 rounded-xl border border-slate-300 text-xs font-bold bg-slate-50">
+            <option value="2_sisi">2 Sisi (Depan &amp; Belakang)</option>
+            <option value="1_sisi">1 Sisi (Depan Saja)</option>
+          </select>
+          <button onclick="closeAdminPrintModal()" class="p-1.5 text-slate-400 hover:text-slate-700 transition">
+            <i class="fa-solid fa-xmark text-lg"></i>
+          </button>
+        </div>
       </div>
 
       <!-- Preview Cards Container (Front & Back side by side) -->
-      <div class="flex flex-col md:flex-row items-center justify-center gap-8 py-4 bg-slate-100 rounded-3xl p-6 border border-slate-200">
+      <div class="flex flex-col md:flex-row items-center justify-center gap-8 py-6 bg-slate-100 rounded-3xl p-6 border border-slate-200">
         
-        <!-- FRONT PREVIEW -->
+        <!-- SISI DEPAN -->
         <div class="flex flex-col items-center">
-          <span class="text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">Tampak Depan</span>
+          <span class="text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">Sisi Depan</span>
           <div id="print-modal-card-front" class="kemenag-card kemenag-card-front shadow-xl">
-            <!-- Cutout Photo -->
-            <div class="kemenag-photo-layer">
+            <div id="print-modal-photo-layer" class="kemenag-photo-layer">
               <img id="print-modal-front-photo" src="assets/sample_pegawai_setengah_badan.png" alt="Foto Pegawai" class="kemenag-photo-img">
             </div>
-            <!-- Wave Overlay -->
             <div class="kemenag-wave-overlay"></div>
-            <!-- Front Text -->
             <div class="kemenag-front-text">
               <h3 id="print-modal-front-name" class="kemenag-front-name">NAMA LENGKAP</h3>
               <p id="print-modal-front-nip" class="kemenag-front-nip">NIP. 198804122014021003</p>
@@ -1747,18 +1763,18 @@
           </div>
         </div>
 
-        <!-- BACK PREVIEW -->
-        <div class="flex flex-col items-center">
-          <span class="text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">Tampak Belakang</span>
+        <!-- SISI BELAKANG -->
+        <div id="print-modal-back-wrapper" class="flex flex-col items-center">
+          <span class="text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">Sisi Belakang</span>
           <div id="print-modal-card-back" class="kemenag-card kemenag-card-back shadow-xl">
             <div class="kemenag-back-content">
               <p class="back-text-item back-label-gap uppercase">NAMA</p>
-              <p id="print-modal-back-name" class="back-text-item back-section-gap font-bold">NAMA LENGKAP</p>
+              <p id="print-modal-back-name" class="back-text-item back-section-gap">NAMA LENGKAP</p>
 
               <p class="back-text-item back-label-gap uppercase">NIP</p>
-              <p id="print-modal-back-nip" class="back-text-item back-section-gap font-mono">198804122014021003</p>
+              <p id="print-modal-back-nip" class="back-text-item back-section-gap">198804122014021003</p>
 
-              <p class="back-text-item back-label-gap uppercase">JABATAN</p>
+              <p class="back-text-item back-label-gap uppercase">JABATAN / UNIT KERJA</p>
               <p id="print-modal-back-jabatan" class="back-text-item">Jabatan Pegawai</p>
               <p id="print-modal-back-bidang" class="back-text-item back-section-gap">Unit Kerja</p>
 
@@ -1766,26 +1782,18 @@
               <p id="print-modal-back-alamat1" class="back-text-item">Jl. D.I. Panjaitan</p>
               <p id="print-modal-back-alamat2" class="back-text-item back-section-gap">No. 19 Banjarmasin</p>
 
-              <p id="print-modal-back-date" class="back-text-item back-section-gap">Banjarmasin, 14 Oktober 2026</p>
+              <p id="print-modal-back-date" class="back-text-item back-section-gap">Banjarmasin, 19 Oktober 2026</p>
 
-              <!-- Dynamic Kepala -->
-              <p id="print-modal-back-kepala-title" class="back-kepala-title">KEPALA</p>
-              <p id="print-modal-back-kepala-name" class="back-kepala-name">Dr. H. MUHAMMAD TAMBRIN, M.M.Pd</p>
-              <p id="print-modal-back-kepala-nip" class="back-kepala-nip">NIP. 196912181996031003</p>
+              <div class="back-signature-block">
+                <p id="print-modal-back-kepala-title" class="back-kepala-title">KEPALA</p>
+                <img id="print-modal-back-ttd-img" src="" alt="TTD Pimpinan" class="back-ttd-img hidden">
+                <p id="print-modal-back-kepala-name" class="back-kepala-name">Dr. H. MUHAMMAD TAMBRIN, M.M.Pd</p>
+                <p id="print-modal-back-kepala-nip" class="back-kepala-nip">NIP. 196705121994031002</p>
+              </div>
             </div>
           </div>
         </div>
 
-      </div>
-
-      <div class="mt-4 p-4 rounded-2xl bg-emerald-50 border border-emerald-200 text-xs text-emerald-900 flex items-start space-x-3">
-        <i class="fa-solid fa-circle-check text-emerald-600 text-base mt-0.5 flex-shrink-0"></i>
-        <div>
-          <p class="font-bold">Informasi Pencetakan Kartu:</p>
-          <p class="text-slate-600 mt-0.5">
-            Tekan tombol <strong>"Cetak Kartu Sekarang"</strong> di bawah untuk membuka dialog print browser. Atur <em>Paper Size</em> ke <strong>A4</strong> atau ukuran PVC kartu khusus Anda, dan centang opsi <em>"Background graphics"</em> pada browser.
-          </p>
-        </div>
       </div>
 
       <div class="pt-5 border-t border-slate-100 flex items-center justify-between gap-3">
@@ -1794,49 +1802,34 @@
         </button>
         <button type="button" onclick="triggerCardPrint()" class="py-3 px-6 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-sm shadow transition flex items-center space-x-2">
           <i class="fa-solid fa-print"></i>
-          <span>Cetak Kartu Sekarang</span>
+          <span>Cetak Kartu Sekarang (CR80)</span>
         </button>
       </div>
-
     </div>
   </div>
 
   <!-- ======================================================== -->
-  <!-- MODAL: ADMIN EDIT NAMA UNIT KERJA -->
+  <!-- MODAL: EDIT NAMA UNIT KERJA -->
   <!-- ======================================================== -->
   <div id="modal-unit-edit" class="fixed inset-0 z-50 bg-slate-900/70 backdrop-blur-sm flex items-center justify-center p-4 hidden">
     <div class="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-slate-200">
-      
       <div class="flex items-center justify-between pb-3 border-b border-slate-100 mb-4">
-        <h4 class="font-bold text-base text-slate-900 flex items-center space-x-2">
-          <i class="fa-solid fa-pen-to-square text-emerald-700"></i>
-          <span>Ubah Nama Unit Kerja</span>
-        </h4>
-        <button onclick="closeEditUnitModal()" class="text-slate-400 hover:text-slate-700 transition">
+        <h4 class="font-bold text-base text-slate-900">Ubah Nama Unit Kerja</h4>
+        <button onclick="closeEditUnitModal()" class="text-slate-400 hover:text-slate-700">
           <i class="fa-solid fa-xmark text-lg"></i>
         </button>
       </div>
-
       <form onsubmit="handleSaveEditedUnit(event)" class="space-y-4">
         <input type="hidden" id="unit-edit-index">
         <div>
-          <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
-            Nama Unit Kerja / Bidang <span class="text-rose-500">*</span>
-          </label>
-          <input type="text" id="unit-edit-name-input" required class="w-full px-4 py-2.5 rounded-xl border border-slate-300 focus:ring-2 focus:ring-emerald-600 text-sm font-semibold">
+          <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Nama Unit Kerja <span class="text-rose-500">*</span></label>
+          <input type="text" id="unit-edit-name-input" required class="w-full px-4 py-2.5 rounded-xl border border-slate-300 text-sm font-semibold">
         </div>
-
-        <div class="pt-2 flex items-center justify-end space-x-3">
-          <button type="button" onclick="closeEditUnitModal()" class="py-2 px-4 rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-50 font-semibold text-xs transition">
-            Batal
-          </button>
-          <button type="submit" class="py-2 px-5 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-xs shadow transition flex items-center space-x-1.5">
-            <i class="fa-solid fa-floppy-disk"></i>
-            <span>Simpan</span>
-          </button>
+        <div class="flex justify-end space-x-2">
+          <button type="button" onclick="closeEditUnitModal()" class="py-2 px-4 rounded-xl border border-slate-200 text-xs font-semibold">Batal</button>
+          <button type="submit" class="py-2 px-5 rounded-xl bg-emerald-700 text-white font-bold text-xs">Simpan</button>
         </div>
       </form>
-
     </div>
   </div>
 

@@ -35,6 +35,18 @@ body {
   transform: translateY(0);
 }
 
+/* Dashboard & Table Small Avatar (PRD 3.2: 40px x 40px, border-radius: 4px, object-fit: cover) */
+.avatar-table-thumb {
+  width: 40px !important;
+  height: 40px !important;
+  border-radius: 4px !important;
+  object-fit: cover !important;
+  object-position: top center !important;
+  flex-shrink: 0;
+  background-color: #e2e8f0;
+  border: 1px solid #cbd5e1;
+}
+
 /* ======================================================== */
 /* OFFICIAL KEMENAG ID CARD (PORTRAIT CR-80) */
 /* Standard CR-80 Ratio: 54mm x 85.6mm (1 : 1.585) */
@@ -57,7 +69,7 @@ body {
   box-shadow: 0 25px 50px -12px rgba(8, 64, 55, 0.32), 0 0 0 1px rgba(0, 0, 0, 0.12);
 }
 
-/* FRONT CARD LAYERING */
+/* FRONT CARD LAYERING - TEMPLATE 1 (STANDAR KEMENAG) */
 .kemenag-card-front {
   background-image: url('assets/kemenag_front_blank.png');
   background-size: cover;
@@ -65,7 +77,12 @@ body {
   background-repeat: no-repeat;
 }
 
-/* Person's Cutout Half-Body Photo Layer */
+/* TEMPLATE 2: MODERN HIJAU EMERALD-GOLD */
+.kemenag-card-front.theme-template_2 {
+  background-image: linear-gradient(155deg, #022c22 0%, #064e3b 45%, #047857 80%, #065f46 100%);
+}
+
+/* Person's Cutout Half-Body Photo Layer (Tanpa Kotak Kaku, Menyatu Alami dengan Latar Kartu) */
 .kemenag-photo-layer {
   position: absolute;
   left: -15px;
@@ -77,13 +94,18 @@ body {
   display: flex;
   align-items: flex-end;
   justify-content: flex-start;
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  overflow: visible;
 }
 
 .kemenag-photo-img {
   width: 100%;
   height: 100%;
-  object-fit: contain;
-  object-position: bottom left;
+  object-fit: contain !important;
+  object-position: bottom left !important;
+  background: transparent !important;
   filter: drop-shadow(0 10px 18px rgba(0, 0, 0, 0.3));
   transition: transform 0.2s ease;
 }
@@ -129,7 +151,7 @@ body {
   font-family: 'Roboto', sans-serif;
   font-weight: 700;
   font-size: 11px;
-  color: #ffde59; /* Official Canva yellow #ffde59 */
+  color: #ffde59;
   letter-spacing: 0.02em;
   margin-top: 3px;
   text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
@@ -146,10 +168,14 @@ body {
   position: relative;
 }
 
-/* Middle Dynamic Text on Card Back */
+.kemenag-card-back.theme-template_2 {
+  background-image: url('assets/kemenag_back_blank.png');
+}
+
+/* Middle Dynamic Text on Card Back - Digeser sedikit ke bawah agar jarak atas seimbang */
 .kemenag-back-content {
   position: absolute;
-  top: 86px;
+  top: 102px;
   left: 14px;
   right: 14px;
   text-align: center;
@@ -163,7 +189,7 @@ body {
   font-weight: 700;
   font-size: 12.5px;
   color: #1a2c44;
-  line-height: 1.38;
+  line-height: 1.36;
   letter-spacing: 0.01em;
   margin: 0;
 }
@@ -173,19 +199,38 @@ body {
 }
 
 .back-section-gap {
-  margin-bottom: 11px;
+  margin-bottom: 10px;
 }
 
 /* Kepala Kanwil Signature & Name on Card Back */
+.back-signature-block {
+  position: relative;
+  margin-top: 2px;
+}
+
 .back-kepala-title {
   font-family: 'Roboto', sans-serif;
   font-weight: 700;
   font-size: 12.5px;
   color: #1a2c44;
-  margin-top: 6px;
-  margin-bottom: 44px; /* Space for the official purple stamp and signature */
+  margin-top: 2px;
+  margin-bottom: 42px; /* Ruang proporsional untuk tanda tangan dan stempel */
   text-transform: uppercase;
   letter-spacing: 0.02em;
+  position: relative;
+  z-index: 2;
+}
+
+.back-ttd-img {
+  position: absolute;
+  top: 14px;
+  left: 50%;
+  transform: translateX(-50%);
+  height: 52px;
+  max-width: 150px;
+  object-fit: contain;
+  z-index: 1;
+  pointer-events: none;
 }
 
 .back-kepala-name {
@@ -196,6 +241,8 @@ body {
   line-height: 1.25;
   margin: 0;
   letter-spacing: 0.01em;
+  position: relative;
+  z-index: 2;
 }
 
 .back-kepala-nip {
@@ -207,6 +254,8 @@ body {
   margin-top: 1px;
   margin-bottom: 0;
   letter-spacing: 0.02em;
+  position: relative;
+  z-index: 2;
 }
 
 /* Hologram Sheen Effect */
@@ -299,8 +348,38 @@ body {
     font-size: 7.5pt !important;
   }
 
+  .kemenag-back-content {
+    top: 16mm !important;
+    left: 2.5mm !important;
+    right: 2.5mm !important;
+  }
+
   .back-text-item {
     font-size: 7.5pt !important;
+    line-height: 1.35 !important;
+  }
+
+  .back-section-gap {
+    margin-bottom: 1.8mm !important;
+  }
+
+  .back-kepala-title {
+    font-size: 7.5pt !important;
+    margin-top: 1mm !important;
+    margin-bottom: 7.2mm !important;
+  }
+
+  .back-ttd-img {
+    height: 8.5mm !important;
+    top: 2.2mm !important;
+  }
+
+  .back-kepala-name {
+    font-size: 7pt !important;
+  }
+
+  .back-kepala-nip {
+    font-size: 6.5pt !important;
   }
 
   .card-hologram {
