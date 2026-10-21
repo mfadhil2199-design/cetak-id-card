@@ -347,11 +347,11 @@
               <div class="w-11 h-11 rounded-xl bg-emerald-100 text-emerald-700 font-black text-lg flex items-center justify-center mb-4">1</div>
               <h3 class="text-base font-bold text-slate-900 mb-2">Siapkan Berkas Pasfoto Resmi</h3>
               <p class="text-slate-600 text-xs sm:text-sm leading-relaxed mb-4">
-                Jika memilih <strong>Unggah Foto Mandiri</strong>, siapkan pasfoto berformat <code>.jpg</code>, <code>.jpeg</code>, atau <code>.png</code> dengan ukuran maksimal <strong>2 MB</strong>. Anda juga dapat memilih opsi <strong>Foto di Kantor</strong>.
+                Jika memilih <strong>Unggah Foto Mandiri</strong>, siapkan pasfoto berformat <code>.jpg</code>, <code>.jpeg</code>, atau <code>.png</code> dengan ukuran maksimal <strong>5 MB</strong>. Anda juga dapat memilih opsi <strong>Foto di Kantor</strong>.
               </p>
               <div class="text-xs text-emerald-800 font-semibold border-t border-slate-100 pt-3 flex items-center space-x-2">
                 <i class="fa-solid fa-circle-check text-emerald-600"></i>
-                <span>Rasio Proporsional 3:4 atau 1:1 (Maks 2 MB)</span>
+                <span>Rasio Proporsional 3:4 atau 1:1 (Maks 5 MB)</span>
               </div>
             </div>
 
@@ -528,7 +528,7 @@
                       <input type="radio" id="radio-photo-ready" name="photo_ready" value="ready" checked onchange="togglePhotoUploadSection(true); updateLivePreview()" class="mt-0.5 text-emerald-700 focus:ring-emerald-600">
                       <div>
                         <span class="block text-xs sm:text-sm font-bold text-slate-800">Unggah Foto Mandiri</span>
-                        <span class="block text-[11px] text-slate-500">Format .jpg, .jpeg, .png (Maks 2 MB)</span>
+                        <span class="block text-[11px] text-slate-500">Format .jpg, .jpeg, .png (Maks 5 MB)</span>
                       </div>
                     </label>
                     <label id="label-photo-office" class="flex items-start space-x-3 p-3.5 rounded-xl border border-slate-200 hover:bg-slate-50 cursor-pointer transition">
@@ -552,7 +552,7 @@
                       <span>Pasfoto &amp; Pengaturan Posisi Foto</span>
                     </h3>
                     <p class="text-xs text-slate-500 mt-1">
-                      Format wajib <strong>.jpg, .jpeg, atau .png</strong> (maks. <strong>2 MB</strong>). Latar belakang foto otomatis dihapus menjadi transparan.
+                      Format wajib <strong>.jpg, .jpeg, atau .png</strong> (maks. <strong>5 MB</strong>). Latar belakang foto otomatis dihapus menjadi transparan.
                     </p>
                   </div>
                   <span id="photo-upload-status-badge" class="text-[10px] px-2.5 py-1 rounded-full bg-amber-100 text-amber-800 font-bold">
@@ -573,7 +573,7 @@
                         Klik atau Tarik Berkas Pasfoto ke Sini
                       </div>
                       <p class="text-xs text-slate-500">
-                        Hanya mendukung <strong>.JPG, .JPEG, .PNG</strong> &bull; Maksimal <strong>2 MB</strong> (2.097.152 bytes)
+                        Hanya mendukung <strong>.JPG, .JPEG, .PNG</strong> &bull; Maksimal <strong>5 MB</strong> (2.097.152 bytes)
                       </p>
                     </div>
                   </div>
@@ -1603,7 +1603,7 @@
 
           <div>
             <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
-              Ganti Pasfoto (.JPG/.PNG Maks 2 MB)
+              Ganti Pasfoto (.JPG/.PNG Maks 5 MB)
             </label>
             <div class="flex items-center space-x-3">
               <img id="admin-edit-photo-preview" src="assets/default-avatar.png" alt="Foto" class="avatar-table-thumb">
@@ -1697,7 +1697,7 @@
 
           <div class="sm:col-span-2">
             <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
-              Unggah Pasfoto (.JPG, .JPEG, .PNG Maks 2 MB)
+              Unggah Pasfoto (.JPG, .JPEG, .PNG Maks 5 MB)
             </label>
             <input type="file" id="admin-add-photo-file" accept=".jpg,.jpeg,.png,image/jpeg,image/png" class="w-full text-xs file:mr-2 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100 text-slate-500 border border-slate-300 rounded-xl p-1.5">
             <p class="text-[10px] text-slate-400 mt-1">Jika dikosongkan, sistem menggunakan foto sampel pegawai transparan default.</p>
